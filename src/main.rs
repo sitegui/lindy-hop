@@ -11,6 +11,7 @@ mod list_mtp_mounts;
 enum Cli {
     /// List the MTP (media transfer protocol) mounts in this device
     ListMtpMounts,
+    /// Copy new videos from the WhatsApp folder into `data/new_files`
     CopyNewVideos {
         /// The name path of the mount, extracted with `list-mtp-mounts`
         mount: PathBuf,

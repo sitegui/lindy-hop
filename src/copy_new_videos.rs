@@ -12,14 +12,19 @@ pub fn copy_new_videos(mount: PathBuf) -> anyhow::Result<()> {
         &mut files,
         &mount,
         &mount.join("Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Video"),
-    )?;
+    )
+    .context("failed to list device files")?;
 
     log::info!("Detected {} files", files.len());
 
     let mut copied_files = match fs::read("data/copied_files.json") {
         Err(err) if err.kind() == ErrorKind::NotFound => CopiedFiles::default(),
         Ok(data) => serde_json::from_slice(&data)?,
-        Err(err) => return Err(err.into()),
+        Err(error) => {
+            return Err(
+                anyhow::Error::from(error).context("failed to read parse previously copied files")
+            )
+        }
     };
 
     log::info!("{} previously copied files", copied_files.files.len());
@@ -38,7 +43,7 @@ pub fn copy_new_videos(mount: PathBuf) -> anyhow::Result<()> {
     log::info!("Will copy {} new files", to_copy.len());
 
     let new_files_dir = Path::new("data/new_files");
-    fs::create_dir_all(new_files_dir)?;
+    fs::create_dir_all(new_files_dir).context("failed to create new_files folder")?;
 
     let mut successes = 0;
     for file in to_copy {
@@ -62,8 +67,13 @@ pub fn copy_new_videos(mount: PathBuf) -> anyhow::Result<()> {
     fs::write(
         "data/copied_files.json",
         serde_json::to_string(&copied_files)?,
-    )?;
+    )
+    .context("failed to persist new copied_files information")?;
     log::info!("{} files copied successfully", successes);
+
+    fs::create_dir_all("data/new_lindy_files")
+        .context("failed to create new_lindy_files folder")?;
+    log::info!("You can now triage these videos and move to data/new_lindy_files the ones that you want to consider");
 
     Ok(())
 }
