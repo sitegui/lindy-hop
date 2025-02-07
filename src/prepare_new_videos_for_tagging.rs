@@ -1,7 +1,8 @@
+use crate::tags_file::{TagsFile, TagsVideo};
+use crate::utils::list_files;
 use anyhow::Context;
-use std::fmt::Write;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub fn prepare_new_videos_for_tagging(part_size: usize) -> anyhow::Result<()> {
     let mut new_lindy_videos = list_files("data/new_lindy_files")?;
@@ -26,7 +27,7 @@ pub fn prepare_new_videos_for_tagging(part_size: usize) -> anyhow::Result<()> {
             id += 1;
         };
 
-        let mut tags_contents = String::new();
+        let mut tags_file = TagsFile::default();
 
         log::info!("Moving {} videos to {}", chunk.len(), tagging_dir.display());
         fs::create_dir_all(&tagging_dir)?;
@@ -39,23 +40,11 @@ pub fn prepare_new_videos_for_tagging(part_size: usize) -> anyhow::Result<()> {
 
             fs::rename(file, tagging_dir.join(file_name))?;
 
-            writeln!(tags_contents, "[{}]", file_name)?;
-            writeln!(tags_contents)?;
+            tags_file.videos.push(TagsVideo::new(file_name.to_string()));
         }
 
-        fs::write(tagging_dir.join("tags.txt"), tags_contents)?;
+        fs::write(tagging_dir.join("tags.txt"), tags_file.to_string())?;
     }
 
     Ok(())
-}
-
-fn list_files(dir: impl AsRef<Path>) -> anyhow::Result<Vec<PathBuf>> {
-    let mut files = Vec::new();
-    for item in fs::read_dir(dir)? {
-        let item = item?;
-        if item.file_type()?.is_file() {
-            files.push(item.path());
-        }
-    }
-    Ok(files)
 }

@@ -1,8 +1,8 @@
+use crate::utils::maybe_read_string;
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 use std::fs;
-use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 
 pub fn copy_new_videos(mount: PathBuf) -> anyhow::Result<()> {
@@ -17,14 +17,9 @@ pub fn copy_new_videos(mount: PathBuf) -> anyhow::Result<()> {
 
     log::info!("Detected {} files", files.len());
 
-    let mut copied_files = match fs::read("data/copied_files.json") {
-        Err(err) if err.kind() == ErrorKind::NotFound => CopiedFiles::default(),
-        Ok(data) => serde_json::from_slice(&data)?,
-        Err(error) => {
-            return Err(
-                anyhow::Error::from(error).context("failed to read parse previously copied files")
-            )
-        }
+    let mut copied_files = match maybe_read_string("data/copied_files.json")? {
+        Some(data) => serde_json::from_str(&data)?,
+        None => CopiedFiles::default(),
     };
 
     log::info!("{} previously copied files", copied_files.files.len());
