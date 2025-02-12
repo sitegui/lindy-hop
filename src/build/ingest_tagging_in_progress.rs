@@ -8,6 +8,8 @@ use std::io::Read;
 use std::path::Path;
 
 pub fn ingest_tagging_in_progress(all_tags: &mut TagsFile) -> anyhow::Result<()> {
+    fs::create_dir_all("data/build/public/videos")?;
+
     for part_dir in list_dirs("data/tagging_in_progress")? {
         ingest_tags(all_tags, &part_dir)?;
     }

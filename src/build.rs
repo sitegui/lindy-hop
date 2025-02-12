@@ -10,8 +10,6 @@ use std::fs;
 use std::path::Path;
 
 pub fn build() -> anyhow::Result<()> {
-    ensure_build_dirs()?;
-
     let all_tags_path = "data/build/tags.txt";
     let mut all_tags: TagsFile = maybe_read_string(all_tags_path)?
         .unwrap_or_default()
@@ -26,15 +24,13 @@ pub fn build() -> anyhow::Result<()> {
     ingest_result?;
     write_result?;
 
+    fs::write(
+        "data/build/public/data.json",
+        serde_json::to_string(&all_tags)?,
+    )?;
+
     update_thumbnails(Path::new("data/build/public/videos"), &all_tags.videos)?;
 
-    Ok(())
-}
-
-fn ensure_build_dirs() -> anyhow::Result<()> {
-    fs::create_dir_all("data/build/public/videos")?;
-    fs::create_dir_all("data/build/public/thumbnails")?;
-    fs::create_dir_all("data/build/public/overviews")?;
     Ok(())
 }
 

@@ -3,11 +3,13 @@ use crate::utils::list_files;
 use anyhow::{ensure, Context};
 use serde_json::Value;
 use std::collections::BTreeSet;
+use std::fs;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
 pub fn update_thumbnails(videos_dir: &Path, videos: &[TagsVideo]) -> anyhow::Result<()> {
     let thumbnail_dir = Path::new("data/build/public/thumbnails");
+    fs::create_dir_all(thumbnail_dir)?;
     let existing_thumbnails = list_files(thumbnail_dir)?;
     let mut existing_thumbnail_hashes = BTreeSet::new();
     for thumbnail in &existing_thumbnails {
