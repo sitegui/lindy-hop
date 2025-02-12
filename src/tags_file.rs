@@ -1,7 +1,6 @@
 //! Read and write to tags.txt format
 
 use anyhow::Context;
-use serde::Serialize;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 

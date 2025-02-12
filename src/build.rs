@@ -1,4 +1,6 @@
+mod encrypt;
 mod ingest_tagging_in_progress;
+mod protected_videos;
 mod update_thumbnails;
 
 use crate::build::ingest_tagging_in_progress::ingest_tagging_in_progress;
@@ -23,11 +25,6 @@ pub fn build() -> anyhow::Result<()> {
     let write_result = fs::write(all_tags_path, all_tags.to_string());
     ingest_result?;
     write_result?;
-
-    fs::write(
-        "data/build/public/data.json",
-        serde_json::to_string(&all_tags)?,
-    )?;
 
     update_thumbnails(Path::new("data/build/public/videos"), &all_tags.videos)?;
 

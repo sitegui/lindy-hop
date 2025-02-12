@@ -65,11 +65,14 @@
       }
 
       async function gui() {
-        const [iv, ciphertext] = await encrypt("1234", "salt", 1000, "something")
+        const [iv, ciphertext] = await encrypt("1234", "salt", 100_000, "something")
         console.log('iv', iv)
         console.log('ciphertext', ciphertext)
-        const message = await decrypt("1234", "salt", 1000, iv, ciphertext)
+        const message = await decrypt("1234", "salt", 100_000, iv, ciphertext)
         console.log('message', message)
+
+        const message2 = await decrypt("1234", "salt", 100_000, "c7599e92094aac2ddbcf9e7b", "8a36f00d622d8e5dccb1b49e278fe93eb47ebbd967ad41dd01")
+        console.log('message2', message2)
       }
     </script>
 </head>
