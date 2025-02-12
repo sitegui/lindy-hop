@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script>
+      function stringToBytes(str) {
+        return new TextEncoder().encode(str)
+      }
+
+      function bytesToString(bytes) {
+        return new TextDecoder().decode(bytes)
+      }
+
+      function arrayBufferToHex(buf) {
+        return Array.from(buf).map(byte => byte.toString(16).padStart(2, '0')).join('')
+      }
+
+      function hexToArrayBuffer(hex) {
+        const bytes = []
+        for (let i = 0; i < hex.length; i += 2) {
+          bytes.push(parseInt(hex.slice(i, i + 2), 16))
+        }
+        return new Uint8Array(bytes)
+      }
+
+      async function encrypt(code, salt, iterations, plaintext) {
+        const key = await deriveKey(code, salt, iterations)
+        const iv = crypto.getRandomValues(new Uint8Array(12))
+        const ciphertext = await crypto.subtle.encrypt({name: "AES-GCM", iv}, key, stringToBytes(plaintext))
+
+        return [arrayBufferToHex(iv), arrayBufferToHex(new Uint8Array(ciphertext))]
+      }
+
+      async function decrypt(code, salt, iterations, iv, ciphertext) {
+        const key = await deriveKey(code, salt, iterations)
+
+        return bytesToString(await crypto.subtle.decrypt({
+          name: "AES-GCM",
+          iv: hexToArrayBuffer(iv)
+        }, key, hexToArrayBuffer(ciphertext)))
+      }
+
+      async function deriveKey(code, salt, iterations) {
+        const codeAsKey = await crypto.subtle.importKey(
+          "raw",
+          stringToBytes(code),
+          "PBKDF2",
+          false,
+          ["deriveKey"],
+        )
+
+        return await crypto.subtle.deriveKey(
+          {
+            name: "PBKDF2",
+            salt: stringToBytes(salt),
+            iterations,
+            hash: "SHA-256",
+          },
+          codeAsKey,
+          {name: "AES-GCM", length: 256},
+          false,
+          ["encrypt", "decrypt"],
+        )
+      }
+
+      async function gui() {
+        const [iv, ciphertext] = await encrypt("1234", "salt", 1000, "something")
+        console.log('iv', iv)
+        console.log('ciphertext', ciphertext)
+        const message = await decrypt("1234", "salt", 1000, iv, ciphertext)
+        console.log('message', message)
+      }
+    </script>
+</head>
+<body>
+<button onclick="gui()">Gui</button>
+</body>
+</html>

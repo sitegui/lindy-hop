@@ -5,12 +5,12 @@ use serde::Serialize;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default)]
 pub struct TagsFile {
     pub videos: Vec<TagsVideo>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub struct TagsVideo {
     pub name: String,
     pub tags: Vec<String>,
