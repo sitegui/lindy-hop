@@ -20,3 +20,5 @@ itertools = "0.14.0"
 handlebars = "6.3.1"
 pbkdf2 = "0.12.2"
 aes-gcm = { version = "0.10.3", features = ["std"] }
+regex = "1.11.1"
+envy = "0.4.2"

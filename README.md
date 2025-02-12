@@ -19,7 +19,7 @@ separate folders to easy the inclusion of a large batch of files
 
 Auto-managed file to remember all files that were copied from the Android phone
 
-### `data/protected_videos.json`
+### `data/restrictions.json`
 
 List the access rules used to protect some videos with a code.
 

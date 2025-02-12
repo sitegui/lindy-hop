@@ -1,13 +1,20 @@
+use crate::config::Config;
 use crate::tags_file::TagsVideo;
 use crate::utils::list_files;
 use anyhow::{ensure, Context};
 use serde_json::Value;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-pub fn update_thumbnails(videos_dir: &Path, videos: &[TagsVideo]) -> anyhow::Result<()> {
+/// Create the necessary thumbnails, returning a mapping from video name to thumbnail name
+pub fn update_thumbnails(
+    config: &Config,
+    videos_dir: &Path,
+    videos: &[TagsVideo],
+) -> anyhow::Result<BTreeMap<String, String>> {
+    let mut mapping = BTreeMap::new();
     let thumbnail_dir = Path::new("data/build/public/thumbnails");
     fs::create_dir_all(thumbnail_dir)?;
     let existing_thumbnails = list_files(thumbnail_dir)?;
@@ -28,19 +35,23 @@ pub fn update_thumbnails(videos_dir: &Path, videos: &[TagsVideo]) -> anyhow::Res
             .rsplit_once('.')
             .context("failed to get file stem")?
             .0;
+        let thumbnail_hash = &video_hash[0..config.thumbnail_hex_chars_prefix];
 
-        if !existing_thumbnail_hashes.contains(&video_hash) {
-            missing_thumbnails.push((video, video_hash));
+        let thumbnail_name = format!("{}.webp", thumbnail_hash);
+
+        mapping.insert(video.name.clone(), thumbnail_name.clone());
+        if !existing_thumbnail_hashes.contains(&thumbnail_hash) {
+            missing_thumbnails.push((video, thumbnail_name));
         }
     }
 
     log::info!("Will update {} new thumbnails", missing_thumbnails.len());
-    for (video, hash) in missing_thumbnails {
+    for (video, thumbnail_name) in missing_thumbnails {
         let video_path = videos_dir.join(&video.name);
         let duration_s = measure_duration_s(&video_path).context("failed to get duration")?;
 
         let thumbnail_position_s = duration_s / 2.0;
-        let thumbnail_path = thumbnail_dir.join(format!("{}.jpg", hash));
+        let thumbnail_path = thumbnail_dir.join(thumbnail_name);
         log::info!(
             "Will extract thumbnail at {} into {}",
             thumbnail_position_s,
@@ -50,7 +61,7 @@ pub fn update_thumbnails(videos_dir: &Path, videos: &[TagsVideo]) -> anyhow::Res
             .context("failed to create thumbnail")?;
     }
 
-    Ok(())
+    Ok(mapping)
 }
 
 fn measure_duration_s(video: &Path) -> anyhow::Result<f64> {

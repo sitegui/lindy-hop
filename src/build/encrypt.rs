@@ -17,7 +17,6 @@ pub fn encrypt(
     plaintext: &str,
 ) -> anyhow::Result<Encrypted> {
     let key = derive_key(password, salt, iterations);
-    eprintln!("key = {:?}", key);
     let cipher = Aes256Gcm::new(&key);
     let iv = Aes256Gcm::generate_nonce(&mut OsRng);
     let ciphertext = cipher.encrypt(&iv, plaintext.as_bytes())?;
@@ -28,6 +27,7 @@ pub fn encrypt(
     })
 }
 
+#[allow(unused)]
 pub fn decrypt(
     password: &str,
     salt: &str,
@@ -60,11 +60,8 @@ mod tests {
     #[test]
     fn test() {
         let encrypted = encrypt("1234", "salt", 100_000, "something").unwrap();
-
-        eprintln!("encrypted = {:?}", encrypted);
-
         let decrypted = decrypt("1234", "salt", 100_000, &encrypted).unwrap();
 
-        eprintln!("decrypted = {:?}", decrypted);
+        assert_eq!(decrypted, "something");
     }
 }

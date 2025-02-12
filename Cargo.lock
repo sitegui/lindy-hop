@@ -354,6 +354,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "envy"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f47e0157f2cb54f5ae1bd371b30a2ae4311e1c028f575cd4e81de7353215965"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -485,10 +494,12 @@ dependencies = [
  "clap",
  "dotenvy",
  "env_logger",
+ "envy",
  "handlebars",
  "itertools",
  "log",
  "pbkdf2",
+ "regex",
  "serde",
  "serde_json",
  "sha2",
