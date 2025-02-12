@@ -7,6 +7,7 @@ use crate::tags_file::TagsFile;
 use crate::utils::maybe_read_string;
 use anyhow::Context;
 use std::fs;
+use std::path::Path;
 
 pub fn build() -> anyhow::Result<()> {
     ensure_build_dirs()?;
@@ -25,7 +26,7 @@ pub fn build() -> anyhow::Result<()> {
     ingest_result?;
     write_result?;
 
-    update_thumbnails(&all_tags.videos)?;
+    update_thumbnails(Path::new("data/build/public/videos"), &all_tags.videos)?;
 
     Ok(())
 }
