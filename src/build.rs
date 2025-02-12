@@ -50,8 +50,6 @@ fn ensure_build_dirs() -> anyhow::Result<()> {
             - > sha256 of content
         - thumbnails
             - > by sha256 of video
-        - overviews
-            - > by sha256 of video
         - data.json
         - index.html
 */

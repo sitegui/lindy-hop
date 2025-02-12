@@ -31,8 +31,14 @@ fn ingest_tags(all_tags: &mut TagsFile, part_dir: &Path) -> anyhow::Result<()> {
         }
     }
 
-    tags.videos = pending_videos;
-    fs::write(tags_path, tags.to_string())?;
+    if pending_videos.is_empty() {
+        log::info!("finished {}", part_dir.display());
+        fs::remove_file(tags_path)?;
+        fs::remove_dir(part_dir)?;
+    } else {
+        tags.videos = pending_videos;
+        fs::write(tags_path, tags.to_string())?;
+    }
 
     Ok(())
 }
