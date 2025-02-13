@@ -16,8 +16,12 @@ body {
     text-align: center;
 }
 
-.video-video {
+.video-video-row {
     text-align: center;
+}
+
+.video-video {
+    max-width: 100%;
 }
 
 .video-tags {

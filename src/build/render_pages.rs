@@ -17,7 +17,6 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
         .flat_map(|video| &video.tags)
         .counts()
         .into_iter()
-        .filter(|&(_, count)| count > 1)
         .map(|(tag, count)| TemplateTag { tag, count })
         .sorted_by_key(|each| (Reverse(each.count), each.tag))
         .collect_vec();

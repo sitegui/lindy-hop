@@ -34,8 +34,8 @@ Montrer videos de <select id="tag-filter" onchange="applyFilter(this.value)">
                 <img src="thumbnails/{{thumbnail}}" alt="video thumbnail">
             </div>
 
-            <div class="video-video">
-                <video style="display: none" controls poster="thumbnails/{{thumbnail}}"
+            <div class="video-video-row">
+                <video class="video-video" style="display: none" controls poster="thumbnails/{{thumbnail}}"
                        onplay="stopAllOtherVideos(this)">
                 </video>
             </div>
