@@ -57,7 +57,7 @@ pub fn update_thumbnails(
             thumbnail_position_s,
             thumbnail_path.display()
         );
-        create_thumbnail(&video_path, thumbnail_position_s, &thumbnail_path)
+        create_thumbnail(config, &video_path, thumbnail_position_s, &thumbnail_path)
             .context("failed to create thumbnail")?;
     }
 
@@ -87,7 +87,12 @@ fn measure_duration_s(video: &Path) -> anyhow::Result<f64> {
     Ok(duration)
 }
 
-fn create_thumbnail(input: &Path, position_s: f64, output: &Path) -> anyhow::Result<()> {
+fn create_thumbnail(
+    config: &Config,
+    input: &Path,
+    position_s: f64,
+    output: &Path,
+) -> anyhow::Result<()> {
     let status = Command::new("ffmpeg")
         .arg("-y")
         .arg("-i")
@@ -97,7 +102,7 @@ fn create_thumbnail(input: &Path, position_s: f64, output: &Path) -> anyhow::Res
         .arg("-frames:v")
         .arg("1")
         .arg("-vf")
-        .arg("scale=-1:128")
+        .arg(format!("scale=-1:{}", config.thumbnail_height))
         .arg(output)
         .stdin(Stdio::null())
         .stdout(Stdio::null())

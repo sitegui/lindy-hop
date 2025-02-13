@@ -83,9 +83,12 @@ fn convert_video(
         LibraryFile::Private { accesses }
     };
 
+    let mut tags = video.tags.clone();
+    tags.sort();
+
     Ok(LibraryVideo {
         date: extract_date(&video.tags),
-        tags: video.tags.clone(),
+        tags,
         thumbnail: thumbnails
             .get(&video.name)
             .context("missing thumbnail")?
