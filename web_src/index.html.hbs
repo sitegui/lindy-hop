@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lindy hop</title>
+</head>
+<body>
+{{#each videos}}
+    <div>
+        <p>Date = {{date.year}} - {{date.month}} - {{date.day}}</p>
+        <p>
+            Tags =
+            {{#each tags}}
+                <span>{{this}}</span>
+            {{/each}}
+        </p>
+        <p>
+            Thumbnail = {{thumbnail}}
+        </p>
+        {{#if eq file.type "public"}}
+            <p>Video = {{file.video}}</p>
+        {{else}}
+            {{#each file.accesses}}
+                <p>Protected video = {{rule}}, {{iv}}, {{ciphertext}}</p>
+            {{/each}}
+        {{/if}}
+    </div>
+{{/each}}
+</body>
+</html>

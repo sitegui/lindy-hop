@@ -22,3 +22,4 @@ pbkdf2 = "0.12.2"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 regex = "1.11.1"
 envy = "0.4.2"
+rust-embed = "8.5.0"

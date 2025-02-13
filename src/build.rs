@@ -1,11 +1,13 @@
 mod encrypt;
 mod ingest_tagging_in_progress;
 mod library;
+mod render_template;
 mod restrictions;
 mod update_thumbnails;
 
 use crate::build::ingest_tagging_in_progress::ingest_tagging_in_progress;
 use crate::build::library::create_library;
+use crate::build::render_template::render_template;
 use crate::build::restrictions::Restrictions;
 use crate::build::update_thumbnails::update_thumbnails;
 use crate::config::Config;
@@ -43,6 +45,10 @@ pub fn build(config: &Config) -> anyhow::Result<()> {
     let library = create_library(config, &all_tags, &restrictions, &thumbnails)?;
 
     fs::write("data/library.json", serde_json::to_string_pretty(&library)?)?;
+
+    log::info!("Will render final page");
+    let rendered = render_template(&library)?;
+    fs::write("data/build/public/index.html", rendered)?;
 
     Ok(())
 }

@@ -21,7 +21,7 @@ pub struct LibraryVideo {
     pub file: LibraryFile,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
 pub struct Date {
     pub year: u16,
     pub month: u8,
@@ -58,6 +58,8 @@ pub fn create_library(
             .push(convert_video(config, restrictions, video, thumbnails)?);
     }
 
+    library.videos.sort_by_key(|video| video.date);
+
     Ok(library)
 }
 
@@ -77,7 +79,7 @@ fn convert_video(
         for rule in rules {
             accesses.push(create_file_access(config, &video.name, rule)?);
         }
-        LibraryFile::Private { accesses: accesses }
+        LibraryFile::Private { accesses }
     };
 
     Ok(LibraryVideo {
