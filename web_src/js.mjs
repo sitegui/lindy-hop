@@ -1,13 +1,48 @@
+window.playVideo = function (thumbnailEl) {
+  const videoEl = thumbnailEl.parentElement.querySelector('video')
+  const video = thumbnailEl.dataset.video
+  const accessRule = thumbnailEl.dataset.accessRule
+  const accessIv = thumbnailEl.dataset.accessIv
+  const accessCiphertext = thumbnailEl.dataset.accessCiphertext
+  const accessSalt = thumbnailEl.dataset.accessSalt
+  const accessIterations = thumbnailEl.dataset.accessIterations
+
+  if (video) {
+    showVideo(videoEl, thumbnailEl, video)
+  } else {
+    const password = prompt(`Cette video fait partie de la collection ${accessRule} et est protégée. Merci d'entrer le code d'accès`)
+    if (password) {
+      decrypt(password, accessSalt, Number(accessIterations), accessIv, accessCiphertext).then(video => {
+        showVideo(videoEl, thumbnailEl, video)
+      }).catch(error => {
+        alert("Code incorrect")
+        console.error(error)
+      })
+    }
+  }
+}
+
+window.stopAllOtherVideos = function (videoEl) {
+  for (const anotherVideoEl of document.querySelectorAll('video')) {
+    if (anotherVideoEl !== videoEl) {
+      anotherVideoEl.pause()
+    }
+  }
+}
+
+function showVideo(videoEl, thumbnailEl, video) {
+  videoEl.style.display = ''
+  videoEl.src = `videos/${video}`
+  thumbnailEl.style.display = 'none'
+  videoEl.play()
+}
+
 function stringToBytes(str) {
   return new TextEncoder().encode(str)
 }
 
 function bytesToString(bytes) {
   return new TextDecoder().decode(bytes)
-}
-
-function arrayBufferToHex(buf) {
-  return Array.from(buf).map(byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
 function hexToArrayBuffer(hex) {
@@ -18,16 +53,8 @@ function hexToArrayBuffer(hex) {
   return new Uint8Array(bytes)
 }
 
-async function encrypt(code, salt, iterations, plaintext) {
-  const key = await deriveKey(code, salt, iterations)
-  const iv = crypto.getRandomValues(new Uint8Array(12))
-  const ciphertext = await crypto.subtle.encrypt({name: "AES-GCM", iv}, key, stringToBytes(plaintext))
-
-  return [arrayBufferToHex(iv), arrayBufferToHex(new Uint8Array(ciphertext))]
-}
-
-async function decrypt(code, salt, iterations, iv, ciphertext) {
-  const key = await deriveKey(code, salt, iterations)
+async function decrypt(password, salt, iterations, iv, ciphertext) {
+  const key = await deriveKey(password, salt, iterations)
 
   return bytesToString(await crypto.subtle.decrypt({
     name: "AES-GCM",
@@ -54,8 +81,6 @@ async function deriveKey(code, salt, iterations) {
     codeAsKey,
     {name: "AES-GCM", length: 256},
     false,
-    ["encrypt", "decrypt"],
+    ["decrypt"],
   )
 }
-
-console.log('worked')

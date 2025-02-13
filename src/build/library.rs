@@ -33,7 +33,7 @@ pub struct Date {
 #[serde(tag = "type")]
 pub enum LibraryFile {
     Public { video: String },
-    Private { accesses: Vec<LibraryFileAccess> },
+    Private { access: LibraryFileAccess },
 }
 
 #[derive(Debug, Serialize)]
@@ -70,17 +70,14 @@ fn convert_video(
     video: &TagsVideo,
     thumbnails: &BTreeMap<String, String>,
 ) -> anyhow::Result<LibraryVideo> {
-    let rules = restrictions.find_rules(video);
-    let file = if rules.is_empty() {
-        LibraryFile::Public {
+    let rule = restrictions.find(video);
+    let file = match rule {
+        None => LibraryFile::Public {
             video: video.name.clone(),
-        }
-    } else {
-        let mut accesses = Vec::with_capacity(rules.len());
-        for rule in rules {
-            accesses.push(create_file_access(config, &video.name, rule)?);
-        }
-        LibraryFile::Private { accesses }
+        },
+        Some(rule) => LibraryFile::Private {
+            access: create_file_access(config, &video.name, rule)?,
+        },
     };
 
     let mut tags = video.tags.clone();

@@ -7,6 +7,10 @@ body {
     text-align: center;
 }
 
+.video-video {
+    text-align: center;
+}
+
 .video-tags {
     padding: 5px;
 }
@@ -16,4 +20,9 @@ body {
     padding: 1px 5px;
     border-radius: 3px;
     background: hsl(35, 84%, 70%);
+    cursor: pointer;
+}
+
+.video-thumbnail {
+    cursor: pointer;
 }

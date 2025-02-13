@@ -1,5 +1,4 @@
 use crate::tags_file::TagsVideo;
-use itertools::Itertools;
 use serde::Deserialize;
 
 /// Declare all the access rules used to restrict the visibility of the videos
@@ -19,11 +18,8 @@ pub struct RestrictionRule {
 }
 
 impl Restrictions {
-    pub fn find_rules(&self, video: &TagsVideo) -> Vec<&RestrictionRule> {
-        self.rules
-            .iter()
-            .filter(|rule| rule.matches(video))
-            .collect_vec()
+    pub fn find(&self, video: &TagsVideo) -> Option<&RestrictionRule> {
+        self.rules.iter().find(|rule| rule.matches(video))
     }
 }
 

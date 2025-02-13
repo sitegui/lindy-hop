@@ -3,26 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>Lindy Hop videos</title>
-    <script src="js.mjs" type="module"></script>
     <link rel="stylesheet" href="css.css">
+    <script src="js.mjs" type="module"></script>
 </head>
 <body>
 <h1 class="page-title">Lindy Hop videos</h1>
 {{#each videos}}
-    <div class="video-container"
-        {{#if accesses}}
-         data-accesses="{{accesses}}"
-        {{/if}}
-    >
-        <div class="video-thumbnail">
+    <div class="video-container">
+        <div class="video-thumbnail"
+            {{#if video}}
+             data-video="{{video}}"
+            {{else}}
+             data-access-rule="{{access_rule}}"
+             data-access-iv="{{access_iv}}"
+             data-access-ciphertext="{{access_ciphertext}}"
+             data-access-salt="{{../access_salt}}"
+             data-access-iterations="{{../access_iterations}}"
+            {{/if}}
+             onclick="playVideo(this)">
             <img src="thumbnails/{{thumbnail}}" alt="video thumbnail">
         </div>
 
-        {{#if video}}
-            <video class="video-video" style="display: none" controls poster="thumbnails/{{thumbnail}}"
-                   src='videos/{{video}}'>
+        <div class="video-video">
+            <video style="display: none" controls poster="thumbnails/{{thumbnail}}" onplay="stopAllOtherVideos(this)">
             </video>
-        {{/if}}
+        </div>
 
         <div class="video-tags">
             {{#each tags}}

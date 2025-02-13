@@ -43,7 +43,7 @@ pub fn build(config: &Config) -> anyhow::Result<()> {
     fs::write("data/library.json", serde_json::to_string_pretty(&library)?)?;
 
     log::info!("Will render final page");
-    render_pages(&library)?;
+    render_pages(config, &library)?;
 
     Ok(())
 }
