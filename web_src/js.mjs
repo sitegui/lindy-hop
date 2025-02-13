@@ -43,6 +43,14 @@ window.applyFilter = function (tag) {
       containerEl.style.display = videoTags.includes(tag) ? '' : 'none'
     }
   }
+
+  for (const tagEl of document.querySelectorAll('.video-tag')) {
+    if (!tag) {
+      tagEl.classList.remove('video-tag-selected')
+    } else {
+      tagEl.classList.toggle('video-tag-selected', tagEl.textContent === tag)
+    }
+  }
 }
 
 function getPassword(rule) {
@@ -107,3 +115,4 @@ async function decrypt(password, salt, iterations, iv, ciphertext) {
   return new TextDecoder().decode(plaintextBytes)
 }
 
+window.applyFilter('')

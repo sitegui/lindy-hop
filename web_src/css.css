@@ -1,6 +1,7 @@
 body {
     max-width: 1024px;
     margin: auto;
+    padding: 5px;
 }
 
 .video-container {
@@ -21,14 +22,21 @@ body {
 
 .video-tags {
     padding: 5px;
+    line-height: 2em;
 }
 
 .video-tag {
-    border: thin hsl(35, 84%, 60%) solid;
+    border: 2px hsl(35, 84%, 60%) solid;
     padding: 1px 5px;
     border-radius: 3px;
-    background: hsl(35, 84%, 70%);
+    background: hsl(35, 84%, 75%);
     cursor: pointer;
+    white-space: nowrap;
+}
+
+.video-tag-selected {
+    border-color: hsl(35, 84%, 30%);
+    background: hsl(35, 84%, 60%);
 }
 
 .video-thumbnail {
