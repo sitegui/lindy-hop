@@ -33,6 +33,8 @@ window.stopAllOtherVideos = function (videoEl) {
 }
 
 window.applyFilter = function (tag) {
+  document.getElementById('tag-filter').value = tag
+
   for (const containerEl of document.querySelectorAll('.video-container')) {
     if (!tag) {
       containerEl.style.display = ''

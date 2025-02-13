@@ -9,7 +9,7 @@
 <body>
 <h1 class="page-title">Lindy Hop videos</h1>
 
-Montrer videos de <select onchange="applyFilter(this.value)">
+Montrer videos de <select id="tag-filter" onchange="applyFilter(this.value)">
     <option value="">(tout)</option>
     {{#each non_unique_tags}}
         <option value="{{tag}}">{{tag}} ({{count}})</option>
@@ -45,7 +45,7 @@ Montrer videos de <select onchange="applyFilter(this.value)">
 
             <div class="video-tags">
                 {{#each tags}}
-                    <span class="video-tag">{{this}}</span>
+                    <span class="video-tag" onclick='applyFilter("{{this}}")'>{{this}}</span>
                 {{/each}}
             </div>
 
