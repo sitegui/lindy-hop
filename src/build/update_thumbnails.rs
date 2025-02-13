@@ -15,7 +15,7 @@ pub fn update_thumbnails(
     videos: &[TagsVideo],
 ) -> anyhow::Result<BTreeMap<String, String>> {
     let mut mapping = BTreeMap::new();
-    let thumbnail_dir = Path::new("data/build/public/thumbnails");
+    let thumbnail_dir = Path::new("data/build/thumbnails");
     fs::create_dir_all(thumbnail_dir)?;
     let existing_thumbnails = list_files(thumbnail_dir)?;
     let mut existing_thumbnail_hashes = BTreeSet::new();
@@ -89,14 +89,15 @@ fn measure_duration_s(video: &Path) -> anyhow::Result<f64> {
 
 fn create_thumbnail(input: &Path, position_s: f64, output: &Path) -> anyhow::Result<()> {
     let status = Command::new("ffmpeg")
+        .arg("-y")
         .arg("-i")
         .arg(input)
         .arg("-ss")
         .arg(position_s.to_string())
         .arg("-frames:v")
         .arg("1")
-        .arg("-q:v")
-        .arg("2")
+        .arg("-vf")
+        .arg("scale=-1:128")
         .arg(output)
         .stdin(Stdio::null())
         .stdout(Stdio::null())

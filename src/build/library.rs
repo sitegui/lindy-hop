@@ -5,6 +5,7 @@ use crate::tags_file::{TagsFile, TagsVideo};
 use anyhow::Context;
 use regex::Regex;
 use serde::Serialize;
+use std::cmp::Reverse;
 use std::collections::BTreeMap;
 use std::sync::LazyLock;
 
@@ -58,7 +59,7 @@ pub fn create_library(
             .push(convert_video(config, restrictions, video, thumbnails)?);
     }
 
-    library.videos.sort_by_key(|video| video.date);
+    library.videos.sort_by_key(|video| Reverse(video.date));
 
     Ok(library)
 }

@@ -1,13 +1,13 @@
 mod encrypt;
 mod ingest_tagging_in_progress;
 mod library;
-mod render_template;
+mod render_pages;
 mod restrictions;
 mod update_thumbnails;
 
 use crate::build::ingest_tagging_in_progress::ingest_tagging_in_progress;
 use crate::build::library::create_library;
-use crate::build::render_template::render_template;
+use crate::build::render_pages::render_pages;
 use crate::build::restrictions::Restrictions;
 use crate::build::update_thumbnails::update_thumbnails;
 use crate::config::Config;
@@ -18,11 +18,11 @@ use std::fs;
 use std::path::Path;
 
 pub fn build(config: &Config) -> anyhow::Result<()> {
-    let all_tags_path = "data/build/tags.txt";
+    let all_tags_path = "data/all_tags.txt";
     let mut all_tags: TagsFile = maybe_read_string(all_tags_path)?
         .unwrap_or_default()
         .parse()
-        .context("failed to parse data/build/tags.txt")?;
+        .context("failed to parse data/tags.txt")?;
 
     log::info!("Read existing tags for {} videos", all_tags.videos.len());
     let ingest_result = ingest_tagging_in_progress(&mut all_tags);
@@ -32,11 +32,7 @@ pub fn build(config: &Config) -> anyhow::Result<()> {
     ingest_result?;
     write_result?;
 
-    let thumbnails = update_thumbnails(
-        config,
-        Path::new("data/build/public/videos"),
-        &all_tags.videos,
-    )?;
+    let thumbnails = update_thumbnails(config, Path::new("data/build/videos"), &all_tags.videos)?;
 
     let restrictions = match maybe_read_string("data/restrictions.json")? {
         None => Restrictions::default(),
@@ -47,8 +43,7 @@ pub fn build(config: &Config) -> anyhow::Result<()> {
     fs::write("data/library.json", serde_json::to_string_pretty(&library)?)?;
 
     log::info!("Will render final page");
-    let rendered = render_template(&library)?;
-    fs::write("data/build/public/index.html", rendered)?;
+    render_pages(&library)?;
 
     Ok(())
 }

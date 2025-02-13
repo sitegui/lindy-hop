@@ -1,0 +1,19 @@
+body {
+    max-width: 1024px;
+    margin: auto;
+}
+
+.video-thumbnail {
+    text-align: center;
+}
+
+.video-tags {
+    padding: 5px;
+}
+
+.video-tag {
+    border: thin hsl(35, 84%, 60%) solid;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: hsl(35, 84%, 70%);
+}

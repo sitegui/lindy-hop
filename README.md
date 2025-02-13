@@ -23,18 +23,22 @@ Auto-managed file to remember all files that were copied from the Android phone
 
 List the access rules used to protect some videos with a code.
 
-### `data/build/tags.txt`
+### `data/all_tags.txt`
 
 Contains all video names and related tags. This can be manually edited later, making it easy to batch update the whole
 library. This is auto-updated by the command `build`.
 
-### `data/build/public/videos`
+### `data/build/videos`
 
 Contains all videos in the library. The file name is the hash of its contents. Videos are copied from
 `data/tagging_in_progress` into here by the command `build`.
 
-### `data/build/public/thumbnails`
+### `data/build/thumbnails`
 
 Contains all the thumbnails for the videos. The file name is the truncated hash of the video content. The thumbnails are
 public information, but the full video name should only be known if the video is public or the user has the correct code
 to access it.
+
+### `data/build/index.html`
+
+Final public page.

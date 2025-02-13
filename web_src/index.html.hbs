@@ -2,29 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Lindy hop</title>
+    <title>Lindy Hop videos</title>
+    <script src="js.mjs" type="module"></script>
+    <link rel="stylesheet" href="css.css">
 </head>
 <body>
+<h1 class="page-title">Lindy Hop videos</h1>
 {{#each videos}}
-    <div>
-        <p>Date = {{date.year}} - {{date.month}} - {{date.day}}</p>
-        <p>
-            Tags =
-            {{#each tags}}
-                <span>{{this}}</span>
-            {{/each}}
-        </p>
-        <p>
-            Thumbnail = {{thumbnail}}
-        </p>
-        {{#if eq file.type "public"}}
-            <p>Video = {{file.video}}</p>
-        {{else}}
-            {{#each file.accesses}}
-                <p>Protected video = {{rule}}, {{iv}}, {{ciphertext}}</p>
-            {{/each}}
+    <div class="video-container"
+        {{#if accesses}}
+         data-accesses="{{accesses}}"
         {{/if}}
+    >
+        <div class="video-thumbnail">
+            <img src="thumbnails/{{thumbnail}}" alt="video thumbnail">
+        </div>
+
+        {{#if video}}
+            <video class="video-video" style="display: none" controls poster="thumbnails/{{thumbnail}}"
+                   src='videos/{{video}}'>
+            </video>
+        {{/if}}
+
+        <div class="video-tags">
+            {{#each tags}}
+                <span class="video-tag">{{this}}</span>
+            {{/each}}
+        </div>
+
     </div>
+
+    {{#unless @last}}
+        <hr>
+    {{/unless}}
 {{/each}}
 </body>
 </html>

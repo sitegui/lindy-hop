@@ -57,3 +57,5 @@ async function deriveKey(code, salt, iterations) {
     ["encrypt", "decrypt"],
   )
 }
+
+console.log('worked')

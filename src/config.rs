@@ -6,6 +6,7 @@ pub struct Config {
     pub thumbnail_hex_chars_prefix: usize,
     pub file_access_salt: String,
     pub file_access_iterations: u32,
+    // TODO: change thumbnail height
 }
 
 impl Config {
