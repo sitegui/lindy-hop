@@ -1,19 +1,21 @@
 window.playVideo = function (thumbnailEl) {
   const videoEl = thumbnailEl.parentElement.querySelector('video')
   const video = thumbnailEl.dataset.video
-  const accessRule = thumbnailEl.dataset.accessRule
-  const accessIv = thumbnailEl.dataset.accessIv
-  const accessCiphertext = thumbnailEl.dataset.accessCiphertext
-  const accessSalt = thumbnailEl.dataset.accessSalt
-  const accessIterations = thumbnailEl.dataset.accessIterations
 
   if (video) {
     showVideo(videoEl, thumbnailEl, video)
   } else {
-    const password = prompt(`Cette video fait partie de la collection ${accessRule} et est protégée. Merci d'entrer le code d'accès`)
+    const accessRule = thumbnailEl.dataset.accessRule
+    const accessIv = thumbnailEl.dataset.accessIv
+    const accessCiphertext = thumbnailEl.dataset.accessCiphertext
+    const accessSalt = thumbnailEl.dataset.accessSalt
+    const accessIterations = thumbnailEl.dataset.accessIterations
+
+    const password = getPassword(accessRule)
     if (password) {
       decrypt(password, accessSalt, Number(accessIterations), accessIv, accessCiphertext).then(video => {
         showVideo(videoEl, thumbnailEl, video)
+        savePassword(accessRule, password)
       }).catch(error => {
         alert("Code incorrect")
         console.error(error)
@@ -30,6 +32,30 @@ window.stopAllOtherVideos = function (videoEl) {
   }
 }
 
+window.applyFilter = function (tag) {
+  for (const containerEl of document.querySelectorAll('.video-container')) {
+    if (!tag) {
+      containerEl.style.display = ''
+    } else {
+      const videoTags = JSON.parse(containerEl.dataset.tags)
+      containerEl.style.display = videoTags.includes(tag) ? '' : 'none'
+    }
+  }
+}
+
+function getPassword(rule) {
+  const stored = localStorage.getItem(`password:${rule}`)
+  if (stored) {
+    return stored
+  }
+
+  return prompt(`Cette video fait partie de la collection ${rule} et est protégée. Merci d'entrer le code d'accès`)
+}
+
+function savePassword(rule, password) {
+  localStorage.setItem(`password:${rule}`, password)
+}
+
 function showVideo(videoEl, thumbnailEl, video) {
   videoEl.style.display = ''
   videoEl.src = `videos/${video}`
@@ -37,50 +63,45 @@ function showVideo(videoEl, thumbnailEl, video) {
   videoEl.play()
 }
 
-function stringToBytes(str) {
-  return new TextEncoder().encode(str)
-}
-
-function bytesToString(bytes) {
-  return new TextDecoder().decode(bytes)
-}
-
-function hexToArrayBuffer(hex) {
-  const bytes = []
-  for (let i = 0; i < hex.length; i += 2) {
-    bytes.push(parseInt(hex.slice(i, i + 2), 16))
-  }
-  return new Uint8Array(bytes)
-}
-
 async function decrypt(password, salt, iterations, iv, ciphertext) {
-  const key = await deriveKey(password, salt, iterations)
+  function stringToBytes(str) {
+    return new TextEncoder().encode(str)
+  }
 
-  return bytesToString(await crypto.subtle.decrypt({
-    name: "AES-GCM",
-    iv: hexToArrayBuffer(iv)
-  }, key, hexToArrayBuffer(ciphertext)))
-}
+  function hexToArrayBuffer(hex) {
+    const bytes = []
+    for (let i = 0; i < hex.length; i += 2) {
+      bytes.push(parseInt(hex.slice(i, i + 2), 16))
+    }
+    return new Uint8Array(bytes)
+  }
 
-async function deriveKey(code, salt, iterations) {
-  const codeAsKey = await crypto.subtle.importKey(
+  const passwordAsKey = await crypto.subtle.importKey(
     "raw",
-    stringToBytes(code),
+    stringToBytes(password),
     "PBKDF2",
     false,
     ["deriveKey"],
   )
 
-  return await crypto.subtle.deriveKey(
+  const key = await crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
       salt: stringToBytes(salt),
       iterations,
       hash: "SHA-256",
     },
-    codeAsKey,
+    passwordAsKey,
     {name: "AES-GCM", length: 256},
     false,
     ["decrypt"],
   )
+
+  const plaintextBytes = await crypto.subtle.decrypt({
+    name: "AES-GCM",
+    iv: hexToArrayBuffer(iv)
+  }, key, hexToArrayBuffer(ciphertext))
+
+  return new TextDecoder().decode(plaintextBytes)
 }
+

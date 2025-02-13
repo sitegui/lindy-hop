@@ -3,6 +3,14 @@ body {
     margin: auto;
 }
 
+.video-container {
+    padding: 10px 0;
+}
+
+.video-container:not(:first-child) {
+    border-top: thin black solid;
+}
+
 .video-thumbnail {
     text-align: center;
 }
@@ -25,4 +33,9 @@ body {
 
 .video-thumbnail {
     cursor: pointer;
+}
+
+.video-protected {
+    margin: 3px 0;
+    font-size: smaller;
 }
