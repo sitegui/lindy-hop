@@ -1,4 +1,4 @@
-use crate::build::library::{Library, LibraryFile};
+use crate::build::library::Library;
 use crate::config::Config;
 use anyhow::Context;
 use handlebars::Handlebars;
@@ -7,6 +7,7 @@ use rust_embed::Embed;
 use serde::Serialize;
 use std::cmp::Reverse;
 use std::fs;
+use std::time::SystemTime;
 
 pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
     let handlebars = Handlebars::new();
@@ -26,25 +27,18 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
     for library_video in &library.videos {
         let tags_json = serde_json::to_string(&library_video.tags)?;
 
-        let template_video = match &library_video.file {
-            LibraryFile::Public { video } => TemplateVideo {
-                tags_json,
-                tags: &library_video.tags,
-                thumbnail: &library_video.thumbnail,
-                video: Some(video),
-                access_rule: None,
-                access_iv: None,
-                access_ciphertext: None,
-            },
-            LibraryFile::Private { access } => TemplateVideo {
-                tags_json,
-                tags: &library_video.tags,
-                thumbnail: &library_video.thumbnail,
-                video: None,
-                access_rule: Some(&access.rule),
-                access_iv: Some(&access.iv),
-                access_ciphertext: Some(&access.ciphertext),
-            },
+        let restriction = library_video.restriction.as_ref();
+        let template_video = TemplateVideo {
+            tags_json,
+            tags: &library_video.tags,
+            thumbnail: &library_video.thumbnail,
+            video: library_video
+                .restriction
+                .is_none()
+                .then_some(&library_video.video),
+            access_rule: restriction.map(|restriction| restriction.rule.as_str()),
+            access_iv: restriction.map(|restriction| restriction.iv.as_str()),
+            access_ciphertext: restriction.map(|restriction| restriction.ciphertext.as_str()),
         };
 
         videos.push(template_video);
@@ -53,7 +47,11 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
     let template = Asset::get("index.html.hbs").context("missing template file")?;
     let template = std::str::from_utf8(&template.data)?;
 
+    let build_time = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)?
+        .as_secs();
     let data = TemplateData {
+        build_time,
         non_unique_tags,
         access_salt: &config.file_access_salt,
         access_iterations: config.file_access_iterations,
@@ -80,6 +78,7 @@ struct Asset;
 
 #[derive(Debug, Serialize)]
 struct TemplateData<'a> {
+    build_time: u64,
     access_salt: &'a str,
     access_iterations: u32,
     videos: Vec<TemplateVideo<'a>>,

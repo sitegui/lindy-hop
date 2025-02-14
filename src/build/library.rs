@@ -19,7 +19,8 @@ pub struct LibraryVideo {
     pub date: Option<Date>,
     pub tags: Vec<String>,
     pub thumbnail: String,
-    pub file: LibraryFile,
+    pub video: String,
+    pub restriction: Option<LibraryRestriction>,
 }
 
 #[derive(Debug, Serialize, Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
@@ -30,14 +31,7 @@ pub struct Date {
 }
 
 #[derive(Debug, Serialize)]
-#[serde(tag = "type")]
-pub enum LibraryFile {
-    Public { video: String },
-    Private { access: LibraryFileAccess },
-}
-
-#[derive(Debug, Serialize)]
-pub struct LibraryFileAccess {
+pub struct LibraryRestriction {
     pub rule: String,
     pub iv: String,
     pub ciphertext: String,
@@ -59,7 +53,9 @@ pub fn create_library(
             .push(convert_video(config, restrictions, video, thumbnails)?);
     }
 
-    library.videos.sort_by_key(|video| Reverse(video.date));
+    library
+        .videos
+        .sort_by_key(|video| (Reverse(video.date), video.video.clone()));
 
     Ok(library)
 }
@@ -70,14 +66,9 @@ fn convert_video(
     video: &TagsVideo,
     thumbnails: &BTreeMap<String, String>,
 ) -> anyhow::Result<LibraryVideo> {
-    let rule = restrictions.find(video);
-    let file = match rule {
-        None => LibraryFile::Public {
-            video: video.name.clone(),
-        },
-        Some(rule) => LibraryFile::Private {
-            access: create_file_access(config, &video.name, rule)?,
-        },
+    let restriction = match restrictions.find(video) {
+        None => None,
+        Some(rule) => Some(create_file_access(config, &video.name, rule)?),
     };
 
     let mut tags = video.tags.clone();
@@ -86,11 +77,12 @@ fn convert_video(
     Ok(LibraryVideo {
         date: extract_date(&video.tags),
         tags,
+        video: video.name.clone(),
         thumbnail: thumbnails
             .get(&video.name)
             .context("missing thumbnail")?
             .clone(),
-        file,
+        restriction,
     })
 }
 
@@ -117,7 +109,7 @@ fn create_file_access(
     config: &Config,
     video_name: &str,
     rule: &RestrictionRule,
-) -> anyhow::Result<LibraryFileAccess> {
+) -> anyhow::Result<LibraryRestriction> {
     let encrypted = encrypt(
         &rule.password,
         &config.file_access_salt,
@@ -125,7 +117,7 @@ fn create_file_access(
         video_name,
     )?;
 
-    Ok(LibraryFileAccess {
+    Ok(LibraryRestriction {
         rule: rule.name.clone(),
         iv: encrypted.iv,
         ciphertext: encrypted.ciphertext,
