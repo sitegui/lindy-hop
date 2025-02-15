@@ -53,6 +53,16 @@ window.applyFilter = function (tag) {
   }
 }
 
+window.toggleFilter = function (tag) {
+  const current = document.getElementById('tag-filter').value
+
+  if (current === tag) {
+    window.applyFilter('')
+  } else {
+    window.applyFilter(tag)
+  }
+}
+
 function getPassword(rule) {
   const stored = localStorage.getItem(`password:${rule}`)
   if (stored) {

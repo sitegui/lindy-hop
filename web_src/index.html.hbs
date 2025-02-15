@@ -46,7 +46,7 @@ Montrer videos de <select id="tag-filter" onchange="applyFilter(this.value)">
 
             <div class="video-tags">
                 {{#each tags}}
-                    <span class="video-tag" onclick='applyFilter("{{this}}")'>{{this}}</span>
+                    <span class="video-tag" onclick='toggleFilter("{{this}}")'>{{this}}</span>
                 {{/each}}
             </div>
 
