@@ -19,7 +19,7 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
     let rendered = handlebars.render_template(&index_template, &data)?;
     fs::write("data/build/index.html", rendered)?;
 
-    let video_template = asset_data("video.html.hbs")?;
+    let video_template = asset_data("video_page.html.hbs")?;
     fs::create_dir_all("data/build/video")?;
     for video in &data.videos {
         let rendered = handlebars.render_template(
@@ -54,14 +54,14 @@ fn template_data<'a>(
     config: &'a Config,
     library: &'a Library,
 ) -> anyhow::Result<IndexTemplateData<'a>> {
-    let non_unique_tags = library
+    let all_tags = library
         .videos
         .iter()
         .flat_map(|video| &video.tags)
         .counts()
         .into_iter()
         .map(|(tag, count)| TemplateTag { tag, count })
-        .sorted_by_key(|each| (Reverse(each.count), each.tag))
+        .sorted_by_key(|each| (each.tag, Reverse(each.count)))
         .collect_vec();
 
     let mut videos = Vec::with_capacity(library.videos.len());
@@ -75,15 +75,15 @@ fn template_data<'a>(
             tags_json,
             tags: &library_video.tags,
             short_name,
-            thumbnail: &library_video.thumbnail,
+            thumbnail: format!("thumbnails/{}", library_video.thumbnail),
             video: library_video
                 .restriction
                 .is_none()
-                .then_some(&library_video.video),
+                .then(|| format!("videos/{}", library_video.video)),
             access_rule: restriction.map(|restriction| restriction.rule.as_str()),
             access_iv: restriction.map(|restriction| restriction.iv.as_str()),
             access_ciphertext: restriction.map(|restriction| restriction.ciphertext.as_str()),
-            share_link: format!("/video/{}.html", short_name),
+            share_link: format!("video/{}.html", short_name),
         };
 
         videos.push(template_video);
@@ -95,7 +95,7 @@ fn template_data<'a>(
 
     Ok(IndexTemplateData {
         build_time,
-        non_unique_tags,
+        all_tags,
         access_salt: &config.file_access_salt,
         access_iterations: config.file_access_iterations,
         videos,
@@ -112,7 +112,7 @@ struct IndexTemplateData<'a> {
     access_salt: &'a str,
     access_iterations: u32,
     videos: Vec<TemplateVideo<'a>>,
-    non_unique_tags: Vec<TemplateTag<'a>>,
+    all_tags: Vec<TemplateTag<'a>>,
 }
 
 #[derive(Debug, Serialize)]
@@ -129,8 +129,8 @@ struct TemplateVideo<'a> {
     tags_json: String,
     tags: &'a [String],
     short_name: &'a str,
-    thumbnail: &'a str,
-    video: Option<&'a str>,
+    thumbnail: String,
+    video: Option<String>,
     access_rule: Option<&'a str>,
     access_iv: Option<&'a str>,
     access_ciphertext: Option<&'a str>,

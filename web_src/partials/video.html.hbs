@@ -1,8 +1,7 @@
 <div class="video-container" data-tags="{{tags_json}}">
-    // TODO: I was trying to fix the display of the pages locally
     <div class="video-thumbnail"
         {{#if video}}
-         data-video="{{video}}"
+         data-video="{{base_url}}/{{video}}"
         {{else}}
          data-access-rule="{{access_rule}}"
          data-access-iv="{{access_iv}}"
@@ -11,11 +10,11 @@
          data-access-iterations="{{access_iterations}}"
         {{/if}}
          onclick="playVideo(this)">
-        <img src="{{base_url}}/thumbnails/{{thumbnail}}" alt="video thumbnail">
+        <img src="{{base_url}}/{{thumbnail}}" alt="video thumbnail">
     </div>
 
     <div class="video-video-row">
-        <video class="video-video" style="display: none" controls poster="{{base_url}}/thumbnails/{{thumbnail}}"
+        <video class="video-video" style="display: none" controls poster="{{base_url}}/{{thumbnail}}"
                onplay="stopAllOtherVideos(this)">
         </video>
     </div>
@@ -25,7 +24,10 @@
     {{/if}}
 
     <div class="video-share-link">
-        <span data-share-link="{{base_url}}/{{share_link}}" onclick="copyShareLink(this)">🔗 Copier le lien</span>
+        <span data-share-link="{{base_url}}/{{share_link}}" onclick="copyShareLink(this)">
+            🔗 Copier le lien
+            <span class="copied-feedback" style="display: none">✅</span>
+        </span>
     </div>
 
     <div class="video-tags">

@@ -68,6 +68,8 @@ window.copyShareLink = function (el) {
   const absolute = new URL(relative, window.location).toString()
   navigator.clipboard.writeText(absolute).catch(error => {
     console.error('failed to write to clipboard', error)
+  }).then(() => {
+    el.querySelector('.copied-feedback').style.display = ''
   })
 }
 
@@ -86,7 +88,7 @@ function savePassword(rule, password) {
 
 function showVideo(videoEl, thumbnailEl, video) {
   videoEl.style.display = ''
-  videoEl.src = `/videos/${video}`
+  videoEl.src = video
   thumbnailEl.style.display = 'none'
   videoEl.play()
 }
@@ -132,5 +134,3 @@ async function decrypt(password, salt, iterations, iv, ciphertext) {
 
   return new TextDecoder().decode(plaintextBytes)
 }
-
-window.applyFilter('')

@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    {{> head title="Vidéos Lindy Hop"}}
+    {{> head base_url="." title="Vidéos Lindy Hop"}}
+    <script type="module">
+        window.applyFilter('')
+    </script>
 </head>
 <body>
 <h1 class="page-title">Vidéos Lindy Hop</h1>
 
 Montrer vidéos de <select id="tag-filter" onchange="applyFilter(this.value)">
     <option value="">(tout)</option>
-    {{#each non_unique_tags}}
+    {{#each all_tags}}
         <option value="{{tag}}">{{tag}} ({{count}})</option>
     {{/each}}
 </select>
