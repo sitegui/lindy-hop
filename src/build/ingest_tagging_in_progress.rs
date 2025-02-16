@@ -58,7 +58,7 @@ fn ingest_video(all_tags: &mut TagsFile, part_dir: &Path, video: TagsVideo) -> a
     let new_name = format!("{}.{}", hash, extension);
     let destination = format!("data/build/videos/{}", new_name);
 
-    if fs::exists(&destination)? {
+    if !fs::exists(&destination)? {
         log::info!("Move {} to {}", source.display(), destination);
         fs::rename(&source, &destination)?;
 
