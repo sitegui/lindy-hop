@@ -10,8 +10,50 @@ use std::fs;
 use std::time::SystemTime;
 
 pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
-    let handlebars = Handlebars::new();
+    let mut handlebars = Handlebars::new();
+    handlebars.register_partial("head", asset_data("partials/head.html.hbs")?)?;
+    handlebars.register_partial("video", asset_data("partials/video.html.hbs")?)?;
 
+    let data = template_data(config, library)?;
+    let index_template = asset_data("index.html.hbs")?;
+    let rendered = handlebars.render_template(&index_template, &data)?;
+    fs::write("data/build/index.html", rendered)?;
+
+    let video_template = asset_data("video.html.hbs")?;
+    fs::create_dir_all("data/build/video")?;
+    for video in &data.videos {
+        let rendered = handlebars.render_template(
+            &video_template,
+            &SingleVideoTemplateData {
+                page_title: format!("Vidéo Lindy Hop - {}", video.tags.iter().format(", ")),
+                build_time: data.build_time,
+                access_salt: data.access_salt,
+                access_iterations: data.access_iterations,
+                video,
+            },
+        )?;
+        fs::write(
+            format!("data/build/video/{}.html", video.short_name),
+            rendered,
+        )?;
+    }
+
+    fs::write("data/build/css.css", asset_data("css.css")?)?;
+    fs::write("data/build/js.mjs", asset_data("js.mjs")?)?;
+
+    Ok(())
+}
+
+fn asset_data(name: &str) -> anyhow::Result<String> {
+    let file = Asset::get(name).with_context(|| format!("missing static file {}", name))?;
+    let data = String::from_utf8(file.data.into_owned())?;
+    Ok(data)
+}
+
+fn template_data<'a>(
+    config: &'a Config,
+    library: &'a Library,
+) -> anyhow::Result<IndexTemplateData<'a>> {
     let non_unique_tags = library
         .videos
         .iter()
@@ -28,9 +70,11 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
         let tags_json = serde_json::to_string(&library_video.tags)?;
 
         let restriction = library_video.restriction.as_ref();
+        let short_name = &library_video.video[0..config.thumbnail_hex_chars_prefix];
         let template_video = TemplateVideo {
             tags_json,
             tags: &library_video.tags,
+            short_name,
             thumbnail: &library_video.thumbnail,
             video: library_video
                 .restriction
@@ -39,37 +83,23 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
             access_rule: restriction.map(|restriction| restriction.rule.as_str()),
             access_iv: restriction.map(|restriction| restriction.iv.as_str()),
             access_ciphertext: restriction.map(|restriction| restriction.ciphertext.as_str()),
+            share_link: format!("/video/{}.html", short_name),
         };
 
         videos.push(template_video);
     }
 
-    let template = Asset::get("index.html.hbs").context("missing template file")?;
-    let template = std::str::from_utf8(&template.data)?;
-
     let build_time = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)?
         .as_secs();
-    let data = TemplateData {
+
+    Ok(IndexTemplateData {
         build_time,
         non_unique_tags,
         access_salt: &config.file_access_salt,
         access_iterations: config.file_access_iterations,
         videos,
-    };
-    let rendered = handlebars.render_template(template, &data)?;
-    fs::write("data/build/index.html", rendered)?;
-
-    fs::write(
-        "data/build/css.css",
-        Asset::get("css.css").context("missing file")?.data,
-    )?;
-    fs::write(
-        "data/build/js.mjs",
-        Asset::get("js.mjs").context("missing file")?.data,
-    )?;
-
-    Ok(())
+    })
 }
 
 #[derive(Embed)]
@@ -77,7 +107,7 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
 struct Asset;
 
 #[derive(Debug, Serialize)]
-struct TemplateData<'a> {
+struct IndexTemplateData<'a> {
     build_time: u64,
     access_salt: &'a str,
     access_iterations: u32,
@@ -86,14 +116,25 @@ struct TemplateData<'a> {
 }
 
 #[derive(Debug, Serialize)]
+struct SingleVideoTemplateData<'a> {
+    page_title: String,
+    build_time: u64,
+    access_salt: &'a str,
+    access_iterations: u32,
+    video: &'a TemplateVideo<'a>,
+}
+
+#[derive(Debug, Serialize)]
 struct TemplateVideo<'a> {
     tags_json: String,
     tags: &'a [String],
+    short_name: &'a str,
     thumbnail: &'a str,
     video: Option<&'a str>,
     access_rule: Option<&'a str>,
     access_iv: Option<&'a str>,
     access_ciphertext: Option<&'a str>,
+    share_link: String,
 }
 
 #[derive(Debug, Serialize)]

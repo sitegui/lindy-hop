@@ -63,6 +63,14 @@ window.toggleFilter = function (tag) {
   }
 }
 
+window.copyShareLink = function (el) {
+  const relative = el.dataset.shareLink
+  const absolute = new URL(relative, window.location).toString()
+  navigator.clipboard.writeText(absolute).catch(error => {
+    console.error('failed to write to clipboard', error)
+  })
+}
+
 function getPassword(rule) {
   const stored = localStorage.getItem(`password:${rule}`)
   if (stored) {
@@ -78,7 +86,7 @@ function savePassword(rule, password) {
 
 function showVideo(videoEl, thumbnailEl, video) {
   videoEl.style.display = ''
-  videoEl.src = `videos/${video}`
+  videoEl.src = `/videos/${video}`
   thumbnailEl.style.display = 'none'
   videoEl.play()
 }

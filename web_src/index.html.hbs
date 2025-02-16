@@ -1,16 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Lindy Hop videos</title>
-    <link rel="stylesheet" href="css.css?{{build_time}}">
-    <script src="js.mjs?{{build_time}}" type="module"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{> head title="Vidéos Lindy Hop"}}
 </head>
 <body>
-<h1 class="page-title">Lindy Hop videos</h1>
+<h1 class="page-title">Vidéos Lindy Hop</h1>
 
-Montrer videos de <select id="tag-filter" onchange="applyFilter(this.value)">
+Montrer vidéos de <select id="tag-filter" onchange="applyFilter(this.value)">
     <option value="">(tout)</option>
     {{#each non_unique_tags}}
         <option value="{{tag}}">{{tag}} ({{count}})</option>
@@ -19,38 +15,7 @@ Montrer videos de <select id="tag-filter" onchange="applyFilter(this.value)">
 
 <div>
     {{#each videos}}
-        <div class="video-container" data-tags="{{tags_json}}">
-            <div class="video-thumbnail"
-                {{#if video}}
-                 data-video="{{video}}"
-                {{else}}
-                 data-access-rule="{{access_rule}}"
-                 data-access-iv="{{access_iv}}"
-                 data-access-ciphertext="{{access_ciphertext}}"
-                 data-access-salt="{{../access_salt}}"
-                 data-access-iterations="{{../access_iterations}}"
-                {{/if}}
-                 onclick="playVideo(this)">
-                <img src="thumbnails/{{thumbnail}}" alt="video thumbnail">
-            </div>
-
-            <div class="video-video-row">
-                <video class="video-video" style="display: none" controls poster="thumbnails/{{thumbnail}}"
-                       onplay="stopAllOtherVideos(this)">
-                </video>
-            </div>
-
-            {{#if access_rule}}
-                <div class="video-protected">🔒 Video protegée</div>
-            {{/if}}
-
-            <div class="video-tags">
-                {{#each tags}}
-                    <span class="video-tag" onclick='toggleFilter("{{this}}")'>{{this}}</span>
-                {{/each}}
-            </div>
-
-        </div>
+        {{> video base_url="." access_salt=../access_salt access_iterations=../access_iterations}}
     {{/each}}
 </div>
 </body>
