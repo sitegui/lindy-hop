@@ -84,7 +84,7 @@ fn template_data<'a>(
             video: library_video
                 .restriction
                 .is_none()
-                .then(|| format!("videos/{}", library_video.video)),
+                .then_some(&library_video.video),
             access_rule: restriction.map(|restriction| restriction.rule.as_str()),
             access_iv: restriction.map(|restriction| restriction.iv.as_str()),
             access_ciphertext: restriction.map(|restriction| restriction.ciphertext.as_str()),
@@ -135,7 +135,7 @@ struct TemplateVideo<'a> {
     tags: &'a [String],
     short_name: &'a str,
     thumbnail: String,
-    video: Option<String>,
+    video: Option<&'a str>,
     access_rule: Option<&'a str>,
     access_iv: Option<&'a str>,
     access_ciphertext: Option<&'a str>,

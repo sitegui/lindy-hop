@@ -1,9 +1,10 @@
 window.playVideo = function (thumbnailEl) {
   const videoEl = thumbnailEl.parentElement.querySelector('video')
+  const baseUrl = thumbnailEl.dataset.baseUrl
   const video = thumbnailEl.dataset.video
 
   if (video) {
-    showVideo(videoEl, thumbnailEl, video)
+    showVideo(videoEl, thumbnailEl, `${baseUrl}/${video}`)
   } else {
     const accessRule = thumbnailEl.dataset.accessRule
     const accessIv = thumbnailEl.dataset.accessIv
@@ -14,7 +15,7 @@ window.playVideo = function (thumbnailEl) {
     const password = getPassword(accessRule)
     if (password) {
       decrypt(password, accessSalt, Number(accessIterations), accessIv, accessCiphertext).then(video => {
-        showVideo(videoEl, thumbnailEl, video)
+        showVideo(videoEl, thumbnailEl, `${baseUrl}/${video}`)
         savePassword(accessRule, password)
       }).catch(error => {
         alert("Code incorrect")

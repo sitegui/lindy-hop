@@ -1,7 +1,8 @@
 <div class="video-container" data-tags="{{tags_json}}">
     <div class="video-thumbnail"
+         data-base-url="{{base_url}}/videos"
         {{#if video}}
-         data-video="{{base_url}}/{{video}}"
+         data-video="{{video}}"
         {{else}}
          data-access-rule="{{access_rule}}"
          data-access-iv="{{access_iv}}"
