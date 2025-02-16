@@ -40,13 +40,18 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
 
     fs::write("data/build/css.css", asset_data("css.css")?)?;
     fs::write("data/build/js.mjs", asset_data("js.mjs")?)?;
+    fs::write("data/build/favicon.png", asset_binary_data("favicon.png")?)?;
 
     Ok(())
 }
 
-fn asset_data(name: &str) -> anyhow::Result<String> {
+fn asset_binary_data(name: &str) -> anyhow::Result<Vec<u8>> {
     let file = Asset::get(name).with_context(|| format!("missing static file {}", name))?;
-    let data = String::from_utf8(file.data.into_owned())?;
+    Ok(file.data.into_owned())
+}
+
+fn asset_data(name: &str) -> anyhow::Result<String> {
+    let data = String::from_utf8(asset_binary_data(name)?)?;
     Ok(data)
 }
 
