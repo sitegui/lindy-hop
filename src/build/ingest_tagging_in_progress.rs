@@ -58,13 +58,30 @@ fn ingest_video(all_tags: &mut TagsFile, part_dir: &Path, video: TagsVideo) -> a
     let new_name = format!("{}.{}", hash, extension);
     let destination = format!("data/build/videos/{}", new_name);
 
-    log::info!("Move {} to {}", source.display(), destination);
-    fs::rename(&source, &destination)?;
+    if fs::exists(&destination)? {
+        log::info!("Move {} to {}", source.display(), destination);
+        fs::rename(&source, &destination)?;
 
-    all_tags.videos.push(TagsVideo {
-        name: new_name,
-        tags: video.tags,
-    });
+        all_tags.videos.push(TagsVideo {
+            name: new_name,
+            tags: video.tags,
+        });
+    } else {
+        log::warn!("File {} already exists: merging their tags", destination);
+        fs::remove_file(&destination)?;
+
+        let ingested_video = all_tags
+            .videos
+            .iter_mut()
+            .find(|video| video.name == new_name)
+            .context("could not find previous tags")?;
+
+        for tag in video.tags {
+            if !ingested_video.tags.contains(&tag) {
+                ingested_video.tags.push(tag);
+            }
+        }
+    }
 
     Ok(())
 }
