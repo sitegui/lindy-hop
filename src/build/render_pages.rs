@@ -39,6 +39,10 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
         )?;
     }
 
+    let about_template = asset_data("about.html.hbs")?;
+    let rendered = handlebars.render_template(&about_template, &())?;
+    fs::write("data/build/a-propos.html", rendered)?;
+
     fs::write("data/build/css.css", asset_data("css.css")?)?;
     fs::write("data/build/js.mjs", asset_data("js.mjs")?)?;
     fs::write("data/build/favicon.png", asset_binary_data("favicon.png")?)?;
