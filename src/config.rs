@@ -5,6 +5,7 @@ use serde::Deserialize;
 pub struct Config {
     pub file_access_iterations: u32,
     pub file_access_salt: String,
+    pub public_url: String,
     pub thumbnail_height: u32,
     pub thumbnail_hex_chars_prefix: usize,
 }

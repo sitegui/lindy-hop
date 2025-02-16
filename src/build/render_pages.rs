@@ -25,6 +25,7 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
         let rendered = handlebars.render_template(
             &video_template,
             &SingleVideoTemplateData {
+                public_url: &config.public_url,
                 page_title: format!("Vidéo Lindy Hop - {}", video.tags.iter().format(", ")),
                 build_time: data.build_time,
                 access_salt: data.access_salt,
@@ -122,6 +123,7 @@ struct IndexTemplateData<'a> {
 
 #[derive(Debug, Serialize)]
 struct SingleVideoTemplateData<'a> {
+    public_url: &'a str,
     page_title: String,
     build_time: u64,
     access_salt: &'a str,
