@@ -14,10 +14,10 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
 
     let home_data = template_data(config, library)?;
     let rendered = handlebars.render("home_page", &home_data)?;
-    fs::write("data/build/index.html", rendered)?;
+    fs::write("build/index.html", rendered)?;
 
-    fs::remove_dir_all("data/build/video")?;
-    fs::create_dir_all("data/build/video")?;
+    let _ = fs::remove_dir_all("build/video");
+    fs::create_dir_all("build/video")?;
     for video in &home_data.videos {
         let video_data = VideoPageData {
             public_url: &config.public_url,
@@ -32,14 +32,11 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
         };
         let rendered = handlebars.render("video_page", &video_data)?;
 
-        fs::write(
-            format!("data/build/video/{}.html", video.short_name),
-            rendered,
-        )?;
+        fs::write(format!("build/video/{}.html", video.short_name), rendered)?;
     }
 
-    fs::remove_dir_all("data/build/tag")?;
-    fs::create_dir_all("data/build/tag")?;
+    let _ = fs::remove_dir_all("build/tag");
+    fs::create_dir_all("build/tag")?;
     for tag in &home_data.all_tags {
         let tag_data = TagPageData {
             selected_tag: &tag.tag.name,
@@ -61,19 +58,16 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
 
         let rendered = handlebars.render("tag_page", &tag_data)?;
 
-        fs::write(
-            format!("data/build/tag/{}.html", tag.tag.clean_name),
-            rendered,
-        )?;
+        fs::write(format!("build/tag/{}.html", tag.tag.clean_name), rendered)?;
     }
 
     let rendered = handlebars.render("about_page", &())?;
-    fs::write("data/build/a-propos.html", rendered)?;
+    fs::write("build/a-propos.html", rendered)?;
 
-    fs::write("data/build/css.css", asset_data("static/css.css")?)?;
-    fs::write("data/build/js.mjs", asset_data("static/js.mjs")?)?;
+    fs::write("build/css.css", asset_data("static/css.css")?)?;
+    fs::write("build/js.mjs", asset_data("static/js.mjs")?)?;
     fs::write(
-        "data/build/favicon.png",
+        "build/favicon.png",
         asset_binary_data("static/favicon.png")?,
     )?;
 

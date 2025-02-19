@@ -15,7 +15,7 @@ pub fn update_thumbnails(
     videos: &[TagsVideo],
 ) -> anyhow::Result<BTreeMap<String, String>> {
     let mut mapping = BTreeMap::new();
-    let thumbnail_dir = Path::new("data/build/thumbnails");
+    let thumbnail_dir = Path::new("build/thumbnails");
     fs::create_dir_all(thumbnail_dir)?;
     let existing_thumbnails = list_files(thumbnail_dir)?;
     let mut existing_thumbnail_hashes = BTreeSet::new();

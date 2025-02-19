@@ -12,7 +12,8 @@ firebase deploy
 
 ## Data format
 
-This section documents the format of the files in the `data` folder, which is not commited into git.
+This section documents the format of the files in the `data` folder, which is not commited into git, but should be
+backed up as it contains all the necessary data to build and update the site.
 
 ### `data/new_lindy_files`
 
@@ -36,17 +37,26 @@ List the access rules used to protect some videos with a code.
 Contains all video names and related tags. This can be manually edited later, making it easy to batch update the whole
 library. This is auto-updated by the command `build`.
 
-### `data/build/videos`
+### `data/videos`
 
 Contains all videos in the library. The file name is the hash of its contents. Videos are copied from
 `data/tagging_in_progress` into here by the command `build`.
 
-### `data/build/thumbnails`
+## Build format
+
+The `build` is also ignored by Git, but unlike `data` does not need to be backed up. It represents the data that will
+be published to the web hosting.
+
+### `build/videos`
+
+The same content as `data/videos`
+
+### `build/thumbnails`
 
 Contains all the thumbnails for the videos. The file name is the truncated hash of the video content. The thumbnails are
 public information, but the full video name should only be known if the video is public or the user has the correct code
 to access it.
 
-### `data/build/index.html`
+### `build/**.html`
 
-Final public page.
+Final public pages.
