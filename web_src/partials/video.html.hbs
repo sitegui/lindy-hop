@@ -1,4 +1,4 @@
-<div class="video-container" data-tags="{{tags_json}}">
+<div class="video-container">
     <div class="video-thumbnail"
          data-base-url="{{base_url}}/videos"
         {{#if video}}
@@ -33,7 +33,8 @@
 
     <div class="video-tags">
         {{#each tags}}
-            <span class="video-tag" onclick='toggleFilter("{{this}}")'>{{this}}</span>
+            <a class="video-tag {{#if (eq name ../selected_tag)}}video-tag-selected{{/if}}"
+               href="{{base_url}}/tag/{{clean_name}}.html">{{name}}</a>
         {{/each}}
     </div>
 </div>

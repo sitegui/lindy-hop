@@ -33,37 +33,6 @@ window.stopAllOtherVideos = function (videoEl) {
   }
 }
 
-window.applyFilter = function (tag) {
-  document.getElementById('tag-filter').value = tag
-
-  for (const containerEl of document.querySelectorAll('.video-container')) {
-    if (!tag) {
-      containerEl.style.display = ''
-    } else {
-      const videoTags = JSON.parse(containerEl.dataset.tags)
-      containerEl.style.display = videoTags.includes(tag) ? '' : 'none'
-    }
-  }
-
-  for (const tagEl of document.querySelectorAll('.video-tag')) {
-    if (!tag) {
-      tagEl.classList.remove('video-tag-selected')
-    } else {
-      tagEl.classList.toggle('video-tag-selected', tagEl.textContent === tag)
-    }
-  }
-}
-
-window.toggleFilter = function (tag) {
-  const current = document.getElementById('tag-filter').value
-
-  if (current === tag) {
-    window.applyFilter('')
-  } else {
-    window.applyFilter(tag)
-  }
-}
-
 window.copyShareLink = function (el) {
   const relative = el.dataset.shareLink
   const absolute = new URL(relative, window.location).toString()

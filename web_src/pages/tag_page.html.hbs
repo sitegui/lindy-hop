@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    {{> head base_url=".." title=page_title}}
+</head>
+<body>
+<h1 class="page-title">{{page_title}}</h1>
+<p><a href="a-propos.html">A propos de ce site</a></p>
+<p>
+    <a href="..">Voir toutes les vidéos</a>
+</p>
+
+<div>
+    {{#each videos}}
+        {{> video base_url=".." access_salt=../access_salt access_iterations=../access_iterations selected_tag=../selected_tag}}
+    {{/each}}
+</div>
+</body>
+</html>

@@ -34,8 +34,9 @@ body {
     padding: 1px 5px;
     border-radius: 3px;
     background: hsl(35, 84%, 75%);
-    cursor: pointer;
     white-space: nowrap;
+    text-decoration: none;
+    color: inherit;
 }
 
 .video-tag-selected {
