@@ -1,10 +1,8 @@
+use crate::hash_file;
 use crate::tags_file::{TagsFile, TagsVideo};
 use crate::utils::list_dirs;
 use anyhow::Context;
-use sha2::{Digest, Sha256};
 use std::fs;
-use std::fs::File;
-use std::io::Read;
 use std::path::Path;
 
 pub fn ingest_tagging_in_progress(all_tags: &mut TagsFile) -> anyhow::Result<()> {
@@ -54,7 +52,7 @@ fn ingest_video(all_tags: &mut TagsFile, part_dir: &Path, video: TagsVideo) -> a
         video.tags.len()
     );
 
-    let hash = hash_file(&source)?;
+    let hash = hash_file::hash_file(&source)?;
     let new_name = format!("{}.{}", hash, extension);
     let destination = format!("data/videos/{}", new_name);
 
@@ -84,20 +82,4 @@ fn ingest_video(all_tags: &mut TagsFile, part_dir: &Path, video: TagsVideo) -> a
     }
 
     Ok(())
-}
-
-fn hash_file(path: &Path) -> anyhow::Result<String> {
-    let mut hasher = Sha256::new();
-    let mut file = File::open(path)?;
-    let mut buf = [0; 4096];
-    loop {
-        let n = file.read(&mut buf)?;
-        if n == 0 {
-            break;
-        }
-
-        hasher.update(&buf[0..n]);
-    }
-    let hash = base16ct::lower::encode_string(&hasher.finalize());
-    Ok(hash)
 }

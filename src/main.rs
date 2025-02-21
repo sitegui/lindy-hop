@@ -9,6 +9,7 @@ use std::path::PathBuf;
 mod build;
 mod config;
 mod copy_new_videos;
+mod hash_file;
 mod list_mtp_mounts;
 mod prepare_new_videos_for_tagging;
 mod tags_file;
