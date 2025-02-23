@@ -35,10 +35,21 @@ enum Cli {
     Build,
     /// Re-encode large videos to reduce storage
     ReEncodeVideos {
-        #[clap(long, default_value_t = 1920)]
-        max_width: i32,
+        /// Maximum number of pixels on the smallest dimension.
         #[clap(long, default_value_t = 1080)]
-        max_height: i32,
+        max_lines: i32,
+        /// Maximum frames per second. Above this, the `target_fps` will be used
+        #[clap(long, default_value_t = 31)]
+        max_fps: i32,
+        /// Maximum MiB/s
+        #[clap(long, default_value_t = 0.5)]
+        max_mib_s: f64,
+        /// Maximum MiB/s
+        #[clap(long, default_value_t = 30)]
+        target_fps: i32,
+        /// The x264 quality to use
+        #[clap(long, default_value_t = 26)]
+        target_crf: i32,
     },
 }
 
@@ -57,8 +68,11 @@ fn main() -> anyhow::Result<()> {
         Cli::PrepareNewVideosForTagging { part_size } => prepare_new_videos_for_tagging(part_size),
         Cli::Build => build(&config),
         Cli::ReEncodeVideos {
-            max_width,
-            max_height,
-        } => re_encode_videos(max_width, max_height),
+            max_lines,
+            max_fps,
+            max_mib_s,
+            target_fps,
+            target_crf,
+        } => re_encode_videos(max_lines, max_fps, max_mib_s, target_fps, target_crf),
     }
 }
