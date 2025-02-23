@@ -39,8 +39,16 @@ library. This is auto-updated by the command `build`.
 
 ### `data/videos`
 
-Contains all videos in the library. The file name is the hash of its contents. Videos are copied from
+Contains all videos in the library. The file name is the hash of the original video contents. Videos are copied from
 `data/tagging_in_progress` into here by the command `build`.
+
+### `original_data/videos`
+
+Large video files are re-encoded so that they can use less storage and bandwidth. When this happens, the re-encoded
+video is stored in `data/videos` and the original is copied into `original_data/videos`. This allows the original data
+to be left out of the main backup.
+
+Note that the file name is kept, so it stays the hash of the original content.
 
 ## Build format
 
