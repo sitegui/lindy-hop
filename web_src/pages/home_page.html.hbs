@@ -7,6 +7,8 @@
 <h1 class="page-title">Vidéos Lindy Hop</h1>
 <p><a href="a-propos.html">A propos de ce site</a></p>
 
+{{> search all_tags=all_tags base_url="."}}
+
 <div>
     {{#each videos}}
         {{> video base_url="." access_salt=../access_salt access_iterations=../access_iterations}}

@@ -1,0 +1,11 @@
+<div>
+    <label for="search-input">Chercher une vidéo :</label>
+    <input id="search-input" oninput="runSearch(this.value)">
+    <div id="search-results">
+        {{#each all_tags}}
+            <a class="video-tag"
+               style="display: none"
+               href="{{base_url}}/tag/{{clean_name}}.html">{{name}}</a>
+        {{/each}}
+    </div>
+</div>

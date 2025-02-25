@@ -12,7 +12,7 @@ use unidecode::unidecode;
 pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
     let handlebars = handlebars()?;
 
-    let home_data = template_data(config, library)?;
+    let home_data = home_page_data(config, library)?;
     let rendered = handlebars.render("home_page", &home_data)?;
     fs::write("build/index.html", rendered)?;
 
@@ -39,8 +39,8 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
     fs::create_dir_all("build/tag")?;
     for tag in &home_data.all_tags {
         let tag_data = TagPageData {
-            selected_tag: &tag.tag.name,
-            page_title: format!("Vidéos Lindy Hop - {}", tag.tag.name),
+            selected_tag: &tag.name,
+            page_title: format!("Vidéos Lindy Hop - {}", tag.name),
             build_time: home_data.build_time,
             access_salt: home_data.access_salt,
             access_iterations: home_data.access_iterations,
@@ -51,14 +51,14 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
                     video
                         .tags
                         .iter()
-                        .any(|video_tag| video_tag.name == tag.tag.name)
+                        .any(|video_tag| video_tag.name == tag.name)
                 })
                 .collect(),
         };
 
         let rendered = handlebars.render("tag_page", &tag_data)?;
 
-        fs::write(format!("build/tag/{}.html", tag.tag.clean_name), rendered)?;
+        fs::write(format!("build/tag/{}.html", tag.clean_name), rendered)?;
     }
 
     let rendered = handlebars.render("about_page", &())?;
@@ -79,6 +79,7 @@ fn handlebars() -> anyhow::Result<Handlebars<'static>> {
 
     handlebars.register_partial("head", asset_data("partials/head.html.hbs")?)?;
     handlebars.register_partial("video", asset_data("partials/video.html.hbs")?)?;
+    handlebars.register_partial("search", asset_data("partials/search.html.hbs")?)?;
 
     handlebars.register_template_string("about_page", asset_data("pages/about_page.html.hbs")?)?;
     handlebars.register_template_string("home_page", asset_data("pages/home_page.html.hbs")?)?;
@@ -98,7 +99,10 @@ fn asset_data(name: &str) -> anyhow::Result<String> {
     Ok(data)
 }
 
-fn template_data<'a>(config: &'a Config, library: &'a Library) -> anyhow::Result<HomePageData<'a>> {
+fn home_page_data<'a>(
+    config: &'a Config,
+    library: &'a Library,
+) -> anyhow::Result<HomePageData<'a>> {
     let mut videos = Vec::with_capacity(library.videos.len());
 
     for library_video in &library.videos {
@@ -135,13 +139,8 @@ fn template_data<'a>(config: &'a Config, library: &'a Library) -> anyhow::Result
     let all_tags = videos
         .iter()
         .flat_map(|video| &video.tags)
-        .counts()
-        .into_iter()
-        .map(|(tag, count)| TagCountData {
-            tag: tag.clone(),
-            count,
-        })
-        .sorted_by_key(|each| each.tag.name.clone())
+        .unique()
+        .cloned()
         .collect_vec();
 
     let build_time = SystemTime::now()
@@ -154,6 +153,7 @@ fn template_data<'a>(config: &'a Config, library: &'a Library) -> anyhow::Result
         access_salt: &config.file_access_salt,
         access_iterations: config.file_access_iterations,
         videos,
+        thumbnail_height: config.thumbnail_height,
     })
 }
 
@@ -167,7 +167,8 @@ struct HomePageData<'a> {
     access_salt: &'a str,
     access_iterations: u32,
     videos: Vec<VideoData<'a>>,
-    all_tags: Vec<TagCountData>,
+    all_tags: Vec<TagData>,
+    thumbnail_height: u32,
 }
 
 #[derive(Debug, Serialize)]
@@ -202,15 +203,8 @@ struct VideoData<'a> {
     share_link: String,
 }
 
-#[derive(Debug, Serialize, Hash, Eq, PartialEq, Clone)]
+#[derive(Debug, Serialize, Eq, PartialEq, Clone, Ord, PartialOrd, Hash)]
 struct TagData {
     name: String,
-    /// URL-safe name
     clean_name: String,
-}
-
-#[derive(Debug, Serialize)]
-struct TagCountData {
-    tag: TagData,
-    count: usize,
 }

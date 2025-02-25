@@ -104,3 +104,92 @@ async function decrypt(password, salt, iterations, iv, ciphertext) {
 
   return new TextDecoder().decode(plaintextBytes)
 }
+
+let searchIndex = null
+
+window.runSearch = function (text) {
+  const tagIndexes = new Set(search(text))
+
+  const tags = document.getElementById('search-results').children
+  for (let i = 0; i < tags.length; i++) {
+    tags[i].style.display = tagIndexes.has(i) ? '' : 'none'
+  }
+}
+
+/**
+ * @param {string} text
+ * @param {number} maxResults
+ * @returns {number[]}
+ */
+function search(text, maxResults = 3) {
+  if (searchIndex === null) {
+    searchIndex = buildSearchIndex()
+  }
+
+  const scores = new Map()
+  for (const trigram of getTrigrams(normalize(text))) {
+    const indexes = searchIndex.get(trigram)
+    if (indexes) {
+      for (const index of indexes) {
+        scores.set(index, (scores.get(index) ?? 0) + 1)
+      }
+    }
+  }
+
+  return (
+    Array.from(scores.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, maxResults)
+      .map(each => each[0])
+  )
+}
+
+function buildSearchIndex() {
+  const tags = document.getElementById('search-results').children
+  const indexesByTrigram = new Map()
+
+  for (let i = 0; i < tags.length; i++) {
+    for (let trigram of getTrigrams(normalize(tags[i].textContent))) {
+      if (!indexesByTrigram.has(trigram)) {
+        indexesByTrigram.set(trigram, [i])
+      } else {
+        indexesByTrigram.get(trigram).push(i)
+      }
+    }
+  }
+
+  return indexesByTrigram
+}
+
+/**
+ * @param {string} text
+ * @returns {string[]}
+ */
+function getTrigrams(text) {
+  if (text.length === 0) {
+    return []
+  }
+  
+  const trigrams = []
+
+  for (const word of text.split(' ')) {
+    if (word.length < 3) {
+      trigrams.push(word)
+    } else {
+      for (let j = 0; j < text.length - 2; j++) {
+        trigrams.push(text.slice(j, j + 3))
+      }
+    }
+  }
+
+  return trigrams
+}
+
+/**
+ * Lower case and remove all especial diacritics from the text
+ * @param {string} text
+ * @returns {string}
+ */
+function normalize(text) {
+  return text.normalize('NFD').toLowerCase().replace(/[^0-9a-z ]/g, '')
+}
