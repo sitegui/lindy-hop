@@ -29,6 +29,7 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
             access_salt: home_data.access_salt,
             access_iterations: home_data.access_iterations,
             video,
+            thumbnail_height: home_data.thumbnail_height,
         };
         let rendered = handlebars.render("video_page", &video_data)?;
 
@@ -179,6 +180,7 @@ struct VideoPageData<'a> {
     access_salt: &'a str,
     access_iterations: u32,
     video: &'a VideoData<'a>,
+    thumbnail_height: u32,
 }
 
 #[derive(Debug, Serialize)]
