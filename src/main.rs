@@ -54,7 +54,7 @@ enum Cli {
 }
 
 fn main() -> anyhow::Result<()> {
-    dotenvy::from_path(".env")?;
+    let _ = dotenvy::from_path(".env");
     dotenvy::from_path("default.env")?;
     env_logger::init();
 

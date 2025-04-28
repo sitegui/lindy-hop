@@ -14,7 +14,9 @@ pub fn re_encode_videos(
 ) -> anyhow::Result<()> {
     let videos = list_files("data/videos")?;
     for video in videos {
-        let info = video_information(&video)?;
+        let info = video_information(&video).with_context(|| {
+            format!("Failed to get information for video {}", video.display())
+        })?;
 
         let lines = info.width.min(info.height);
         let scale = (lines > max_lines).then_some({
@@ -95,13 +97,11 @@ fn parse_video_information(command_output: &str) -> anyhow::Result<VideoInformat
     }
 
     let data: OutputJson = serde_json::from_str(command_output)?;
-    ensure!(data.streams.len() == 2);
-    ensure!(data.streams[0].codec_type == "video");
-    ensure!(data.streams[1].codec_type == "audio");
+    let video_stream = data.streams.into_iter().find(|s| s.codec_type == "video").context("missing video stream")?;
 
-    let width = data.streams[0].width.context("missing width")?;
-    let height = data.streams[0].height.context("missing height")?;
-    let fps_fraction = data.streams[0]
+    let width = video_stream.width.context("missing width")?;
+    let height = video_stream.height.context("missing height")?;
+    let fps_fraction = video_stream
         .avg_frame_rate
         .as_ref()
         .context("missing avg_frame_rate")?
