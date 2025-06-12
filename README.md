@@ -5,9 +5,7 @@ This is a personal platform to host and share videos from my classes and camps o
 ## To publish
 
 ```shell
-npm install -g firebase-tools
-firebase login
-firebase deploy
+rsync --archive --progress build/ sitegui@192.168.1.51:protected/lindy/build/
 ```
 
 ## Data format
