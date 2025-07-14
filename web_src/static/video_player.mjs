@@ -26,7 +26,7 @@ shadowRoot.innerHTML = `
   --control-height: 40px;
   --timeline-bar-height: 5px;
   --timeline-knob-size: 15px;
-  --favorite-size: 15px;
+  --favorite-size: 20px;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -117,7 +117,7 @@ shadowRoot.innerHTML = `
 
 #favorites {
   position: absolute;
-  top: 0;
+  top: calc((var(--control-height) - var(--timeline-knob-size)) / 2 - var(--timeline-knob-size));
   left: calc(-1/2 * (var(--favorite-size) - var(--timeline-knob-size)));
   right: calc(var(--screen-margin) + (var(--favorite-size) + var(--timeline-knob-size)) / 2);
 }
@@ -153,13 +153,33 @@ videoEl.addEventListener('pause', () => {
 
 // Favorites
 const favorites = []
+const favoritesEl = shadowRoot.getElementById('favorites')
 const addFavoriteEl = shadowRoot.getElementById('add-favorite')
 addFavoriteEl.addEventListener('click', () => {
+  if (!Number.isFinite(videoEl.currentTime)) {
+    return
+  }
+
   favorites.push(videoEl.currentTime)
   updateFavorites()
+
+  // If the new favorite overlaps with any other, they both are removed
+  const favoriteEls = Array.from(favoritesEl.children)
+  const lastFavoriteRect = favoriteEls[favoriteEls.length - 1].getBoundingClientRect()
+  const otherFavoriteEls = favoriteEls.slice(0, -1)
+  for (let i = 0; i < otherFavoriteEls.length; i++) {
+    const favoriteEl = otherFavoriteEls[i]
+    const favoriteRect = favoriteEl.getBoundingClientRect()
+    if (favoriteRect.left < lastFavoriteRect.right && favoriteRect.right > lastFavoriteRect.left) {
+      favorites.pop()
+      favorites.splice(i, 1)
+      updateFavorites()
+      break
+    }
+  }
 })
-const updateFavorites = () => {
-  const favoritesEl = shadowRoot.getElementById('favorites')
+
+function updateFavorites() {
   favoritesEl.innerHTML = ''
   for (const favorite of favorites) {
     const favoriteEl = document.createElement('img')
@@ -174,6 +194,7 @@ const updateFavorites = () => {
 // Timeline movement
 const knobEl = shadowRoot.getElementById('timeline-knob')
 let isSeeking = false
+
 function updateKnobPosition() {
   if (!isSeeking) {
     if (Number.isFinite(videoEl.currentTime) && Number.isFinite(videoEl.duration)) {
@@ -183,6 +204,7 @@ function updateKnobPosition() {
     }
   }
 }
+
 videoEl.addEventListener('emptied', updateKnobPosition)
 videoEl.addEventListener('timeupdate', updateKnobPosition)
 videoEl.addEventListener('durationchange', updateKnobPosition)
@@ -190,6 +212,7 @@ videoEl.addEventListener('durationchange', updateKnobPosition)
 // Seek in timeline
 const timelineEl = shadowRoot.getElementById('timeline')
 const timelineBarEl = shadowRoot.getElementById('timeline-bar')
+
 function seekToPress(x) {
   if (!Number.isFinite(videoEl.duration)) {
     return
@@ -214,6 +237,7 @@ function seekToPress(x) {
   videoEl.currentTime = ratio * videoEl.duration
   knobEl.style.left = `${ratio * 100}%`
 }
+
 timelineEl.addEventListener('pointerdown', event => {
   if (!isSeeking) {
     isSeeking = true
@@ -255,6 +279,8 @@ const VideoPlayer = {
     videoEl.src = src
     videoEl.play()
 
+    favorites.length = 0
+    updateFavorites()
     pageEl.requestFullscreen({navigationUI: 'show'})
   }
 }
