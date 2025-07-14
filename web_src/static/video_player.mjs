@@ -118,12 +118,6 @@ document.body.appendChild(pageEl)
 
 const videoEl = shadowRoot.getElementById('video')
 
-// for (const event of ['resize', 'abort', 'canplay', 'canplaythrough', 'durationchange', 'emptied', 'encrypted', 'ended', 'error', 'loadeddata', 'loadedmetadata', 'loadstart', 'pause', 'playing', 'progress', 'ratechange', 'seeked', 'seeking', 'stalled', 'suspend', 'timeupdate', 'volumechange', 'waiting', 'waitingforkey']) {
-//   videoEl.addEventListener(event, () => {
-//     console.log(event)
-//   })
-// }
-
 // Play/pause
 const playEl = shadowRoot.getElementById('play')
 const pauseEl = shadowRoot.getElementById('pause')
@@ -191,6 +185,17 @@ timelineEl.addEventListener('pointerup', event => {
 
     seekToPress(event.clientX)
     videoEl.play()
+  }
+})
+
+// Close
+const closeEl = shadowRoot.getElementById('close')
+closeEl.addEventListener('click', () => {
+  videoEl.pause()
+  pageEl.style.display = 'none'
+
+  if (document.fullscreenElement) {
+    document.exitFullscreen()
   }
 })
 
