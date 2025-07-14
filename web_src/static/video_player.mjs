@@ -32,6 +32,7 @@ shadowRoot.innerHTML = `
   <p><img src="/static/video_player/swipe_right.svg"> Glisse à droite pour aller au repère suivant</p>
   <div id="help-close"><img src="/static/video_player/close.svg"></div>
 </div>
+<div style="position: absolute; top: 0; left: 0; background-color: #eee; font-size: 10px" id="console"></div>
 <style>
 * {
   /* Mobile screens may have rounded corners */
@@ -342,12 +343,45 @@ closeEl.addEventListener('click', () => {
 const helpEl = shadowRoot.getElementById('help')
 const helpModalEl = shadowRoot.getElementById('help-modal')
 helpEl.addEventListener('click', () => {
+  videoEl.pause()
   helpModalEl.style.display = 'block'
 })
 helpModalEl.addEventListener('click', () => {
   helpModalEl.style.display = 'none'
 })
 
+// Gestures
+function consoleLog(msg) {
+  const consoleEl = shadowRoot.getElementById('console')
+  const textEl = document.createElement('div')
+  textEl.innerText = msg
+  consoleEl.appendChild(textEl)
+}
+let gestureState = 'NONE'
+let gestureStartTime = null
+let gestureStartX = null
+let gestureStartY = null
+videoEl.addEventListener('pointerdown', event => {
+  if (gestureState === 'NONE') {
+    gestureState = 'DOWN'
+    gestureStartTime = Date.now()
+    gestureStartX = event.clientX
+    gestureStartY = event.clientY
+    consoleLog(gestureState)
+    videoEl.setPointerCapture(event.pointerId)
+  }
+})
+videoEl.addEventListener('pointermove', event => {
+
+})
+videoEl.addEventListener('pointerup', event => {
+  if (gestureState === 'DOWN') {
+    const duration = Date.now() - gestureStartTime
+    const distance = Math.hypot(gestureStartX - event.clientX, gestureStartY - event.clientY)
+    gestureState = 'NONE'
+    consoleLog(`NONE (after ${duration}ms, ${distance}px)`)
+  }
+})
 
 const VideoPlayer = {
   play(src) {
