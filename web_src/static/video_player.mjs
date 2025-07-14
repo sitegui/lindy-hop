@@ -112,7 +112,7 @@ shadowRoot.innerHTML = `
   border-radius: 100%;
   background-color: #fff;
   cursor: pointer;
-  transition: left 0.1s linear;
+  transition: left 0.05s linear;
 }
 
 #favorites {
@@ -164,6 +164,7 @@ const updateFavorites = () => {
   for (const favorite of favorites) {
     const favoriteEl = document.createElement('img')
     favoriteEl.classList.add('favorite')
+    favoriteEl.dataset.time = favorite
     favoriteEl.src = '/static/video_player/favorite.svg'
     favoriteEl.style.left = `${favorite / videoEl.duration * 100}%`
     favoritesEl.appendChild(favoriteEl)
@@ -190,13 +191,28 @@ videoEl.addEventListener('durationchange', updateKnobPosition)
 const timelineEl = shadowRoot.getElementById('timeline')
 const timelineBarEl = shadowRoot.getElementById('timeline-bar')
 function seekToPress(x) {
+  if (!Number.isFinite(videoEl.duration)) {
+    return
+  }
+
+  // Snap to favorites
+  const favoriteEls = shadowRoot.querySelectorAll('.favorite')
+  for (const favoriteEl of favoriteEls) {
+    const favoriteRect = favoriteEl.getBoundingClientRect()
+    if (x >= favoriteRect.left && x <= favoriteRect.right) {
+      videoEl.currentTime = Number(favoriteEl.dataset.time)
+      const ratio = videoEl.currentTime / videoEl.duration
+      knobEl.style.left = `${ratio * 100}%`
+      return
+    }
+  }
+
   const barRect = timelineBarEl.getBoundingClientRect()
   const ratio = Math.min(1.0, Math.max(0.0, (x - barRect.left) / barRect.width))
 
-  if (Number.isFinite(videoEl.duration)) {
-    videoEl.currentTime = ratio * videoEl.duration
-    knobEl.style.left = `${ratio * 100}%`
-  }
+
+  videoEl.currentTime = ratio * videoEl.duration
+  knobEl.style.left = `${ratio * 100}%`
 }
 timelineEl.addEventListener('pointerdown', event => {
   if (!isSeeking) {
