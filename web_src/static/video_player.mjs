@@ -5,112 +5,127 @@ const shadowRoot = pageEl.attachShadow({mode: 'open'})
 shadowRoot.innerHTML = `
 <video id="video"></video>
 <div id="controls">
-    <div id="help"><img class="icon-button" src="/static/help.svg"></div>
-    <div id="add-favorite"><img class="icon-button" src="/static/add_favorite.svg"></div>
-    <div id="close"><img class="icon-button" src="/static/close.svg"></div>
-    <div id="pause" class="play-pause"><img class="icon-button" src="/static/pause.svg"></div>
-    <div id="play" class="play-pause"><img class="icon-button" src="/static/play.svg"></div>
-    <div id="timeline">
-        <div id="timeline-bar"></div>
-        <div id="timeline-knob-rail">
-          <div id="timeline-knob"></div>
-        </div>
+  <div id="help"><img class="icon-button" src="/static/video_player/help.svg"></div>
+  <div id="add-favorite"><img class="icon-button" src="/static/video_player/add_favorite.svg"></div>
+  <div id="close"><img class="icon-button" src="/static/video_player/close.svg"></div>
+  <div id="pause" class="play-pause"><img class="icon-button" src="/static/video_player/pause.svg"></div>
+  <div id="play" class="play-pause"><img class="icon-button" src="/static/video_player/play.svg"></div>
+  <div id="timeline">
+    <div id="timeline-bar"></div>
+    <div id="favorites"></div>
+    <div id="timeline-knob-rail">
+      <div id="timeline-knob"></div>
     </div>
+  </div>
 </div>
 <style>
 * {
-    /* Mobile screens may have rounded corners */
-    --screen-margin: 10px;
-    --control-width: 50px;
-    --control-height: 40px;
-    --timeline-bar-height: 5px;
-    --timeline-knob-size: 15px;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  /* Mobile screens may have rounded corners */
+  --screen-margin: 10px;
+  --control-width: 50px;
+  --control-height: 40px;
+  --timeline-bar-height: 5px;
+  --timeline-knob-size: 15px;
+  --favorite-size: 15px;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 #video {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 #controls {
-    position: absolute;
-    left: 0;
-    width: 100%;
-    bottom: var(--screen-margin);
-    height: var(--control-height);
-    background-color: #222;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  bottom: var(--screen-margin);
+  height: var(--control-height);
+  background-color: #222;
 }
 
 #help, #add-favorite, #close, .play-pause {
-    position: absolute;
-    width: var(--control-width);
-    height: var(--control-height);
-    background-color: #222;
-    padding: 5px;
-    cursor: pointer;
+  position: absolute;
+  width: var(--control-width);
+  height: var(--control-height);
+  background-color: #222;
+  padding: 5px;
+  cursor: pointer;
 }
 
 #help {
-    left: var(--screen-margin);
-    bottom: var(--control-height);
+  left: var(--screen-margin);
+  bottom: var(--control-height);
 }
 
 #add-favorite {
-    left: calc(var(--screen-margin) + var(--control-width));
-    bottom: var(--control-height);
+  left: calc(var(--screen-margin) + var(--control-width));
+  bottom: var(--control-height);
 }
 
 #close {
-    left: var(--screen-margin);
-    bottom: 0;
+  left: var(--screen-margin);
+  bottom: 0;
 }
 
 .play-pause {
-    left: calc(var(--screen-margin) + var(--control-width));
-    bottom: 0;
+  left: calc(var(--screen-margin) + var(--control-width));
+  bottom: 0;
 }
 
 #timeline {
-    position: absolute;
-    left: calc(var(--screen-margin) + 2 * var(--control-width));
-    right: 0;
-    height: var(--control-height);
-    bottom: 0;
+  position: absolute;
+  left: calc(var(--screen-margin) + 2 * var(--control-width));
+  right: 0;
+  height: var(--control-height);
+  bottom: 0;
 }
 
 .icon-button {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 #timeline-bar {
-    position: absolute;
-    left: calc(var(--timeline-knob-size) / 2);
-    width: calc(100% - var(--screen-margin) - var(--timeline-knob-size));
-    top: calc((var(--control-height) - var(--timeline-bar-height)) / 2);
-    height: var(--timeline-bar-height);
-    background-color: #ccc;
+  position: absolute;
+  left: calc(var(--timeline-knob-size) / 2);
+  width: calc(100% - var(--screen-margin) - var(--timeline-knob-size));
+  top: calc((var(--control-height) - var(--timeline-bar-height)) / 2);
+  height: var(--timeline-bar-height);
+  background-color: #ccc;
 }
 
 #timeline-knob-rail {
-    position: absolute;
-    left: 0;
-    right: calc(var(--screen-margin) + var(--timeline-knob-size));
-    top: calc((var(--control-height) - var(--timeline-knob-size)) / 2);
+  position: absolute;
+  left: 0;
+  right: calc(var(--screen-margin) + var(--timeline-knob-size));
+  top: calc((var(--control-height) - var(--timeline-knob-size)) / 2);
 }
 
 #timeline-knob {
-    position: absolute;
-    left: 0;
-    width: var(--timeline-knob-size);
-    height: var(--timeline-knob-size);
-    border-radius: 100%;
-    background-color: #fff;
-    cursor: pointer;
-    transition: left 0.1s linear;
+  position: absolute;
+  left: 0;
+  width: var(--timeline-knob-size);
+  height: var(--timeline-knob-size);
+  border-radius: 100%;
+  background-color: #fff;
+  cursor: pointer;
+  transition: left 0.1s linear;
+}
+
+#favorites {
+  position: absolute;
+  top: 0;
+  left: calc(-1/2 * (var(--favorite-size) - var(--timeline-knob-size)));
+  right: calc(var(--screen-margin) + (var(--favorite-size) + var(--timeline-knob-size)) / 2);
+}
+
+.favorite {
+  position: absolute;
+  width: var(--favorite-size);
+  height: var(--favorite-size);
 }
 </style>`
 
@@ -135,6 +150,25 @@ videoEl.addEventListener('pause', () => {
   pauseEl.style.display = 'none'
   playEl.style.display = 'block'
 })
+
+// Favorites
+const favorites = []
+const addFavoriteEl = shadowRoot.getElementById('add-favorite')
+addFavoriteEl.addEventListener('click', () => {
+  favorites.push(videoEl.currentTime)
+  updateFavorites()
+})
+const updateFavorites = () => {
+  const favoritesEl = shadowRoot.getElementById('favorites')
+  favoritesEl.innerHTML = ''
+  for (const favorite of favorites) {
+    const favoriteEl = document.createElement('img')
+    favoriteEl.classList.add('favorite')
+    favoriteEl.src = '/static/video_player/favorite.svg'
+    favoriteEl.style.left = `${favorite / videoEl.duration * 100}%`
+    favoritesEl.appendChild(favoriteEl)
+  }
+}
 
 // Timeline movement
 const knobEl = shadowRoot.getElementById('timeline-knob')
@@ -207,7 +241,6 @@ const VideoPlayer = {
 
     pageEl.requestFullscreen({navigationUI: 'show'})
   }
-
 }
 
 window.VideoPlayer = VideoPlayer
