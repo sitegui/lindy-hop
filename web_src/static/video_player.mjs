@@ -167,34 +167,35 @@ function seekToPress(x) {
   }
 }
 let isSeeking = false
-timelineEl.addEventListener('mousedown', event => {
+timelineEl.addEventListener('pointerdown', event => {
   if (!isSeeking) {
     isSeeking = true
 
     videoEl.pause()
     seekToPress(event.clientX)
 
-    timelineEl.addEventListener('mousemove', seekOnMouseMove)
-    document.addEventListener('mouseup', seekOnMouseUp)
+    timelineEl.addEventListener('pointermove', seekMove)
+    document.addEventListener('pointerup', seekStop)
+    timelineEl.setPointerCapture(event.pointerId)
   }
 })
-function seekOnMouseMove(event) {
+function seekMove(event) {
   if (!isSeeking) {
-    timelineEl.removeEventListener('mousemove', seekOnMouseMove)
-    document.removeEventListener('mouseup', seekOnMouseUp)
+    timelineEl.removeEventListener('pointermove', seekMove)
+    document.removeEventListener('pointerup', seekStop)
   } else {
     seekToPress(event.clientX)
   }
 }
-function seekOnMouseUp(event) {
+function seekStop(event) {
   if (isSeeking) {
     isSeeking = false
 
     seekToPress(event.clientX)
     videoEl.play()
   }
-  timelineEl.removeEventListener('mousemove', seekOnMouseMove)
-  document.removeEventListener('mouseup', seekOnMouseUp)
+  timelineEl.removeEventListener('pointermove', seekMove)
+  document.removeEventListener('pointerup', seekStop)
 
 }
 
