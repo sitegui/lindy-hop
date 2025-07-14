@@ -144,11 +144,14 @@ videoEl.addEventListener('pause', () => {
 
 // Timeline movement
 const knobEl = shadowRoot.getElementById('timeline-knob')
+let isSeeking = false
 function updateKnobPosition() {
-  if (Number.isFinite(videoEl.currentTime) && Number.isFinite(videoEl.duration)) {
-    knobEl.style.left = `${videoEl.currentTime / videoEl.duration * 100}%`
-  } else {
-    knobEl.style.left = '0'
+  if (!isSeeking) {
+    if (Number.isFinite(videoEl.currentTime) && Number.isFinite(videoEl.duration)) {
+      knobEl.style.left = `${videoEl.currentTime / videoEl.duration * 100}%`
+    } else {
+      knobEl.style.left = '0'
+    }
   }
 }
 videoEl.addEventListener('emptied', updateKnobPosition)
@@ -164,9 +167,9 @@ function seekToPress(x) {
 
   if (Number.isFinite(videoEl.duration)) {
     videoEl.currentTime = ratio * videoEl.duration
+    knobEl.style.left = `${ratio * 100}%`
   }
 }
-let isSeeking = false
 timelineEl.addEventListener('pointerdown', event => {
   if (!isSeeking) {
     isSeeking = true
@@ -174,30 +177,22 @@ timelineEl.addEventListener('pointerdown', event => {
     videoEl.pause()
     seekToPress(event.clientX)
 
-    timelineEl.addEventListener('pointermove', seekMove)
-    document.addEventListener('pointerup', seekStop)
     timelineEl.setPointerCapture(event.pointerId)
   }
 })
-function seekMove(event) {
-  if (!isSeeking) {
-    timelineEl.removeEventListener('pointermove', seekMove)
-    document.removeEventListener('pointerup', seekStop)
-  } else {
+timelineEl.addEventListener('pointermove', event => {
+  if (isSeeking) {
     seekToPress(event.clientX)
   }
-}
-function seekStop(event) {
+})
+timelineEl.addEventListener('pointerup', event => {
   if (isSeeking) {
     isSeeking = false
 
     seekToPress(event.clientX)
     videoEl.play()
   }
-  timelineEl.removeEventListener('pointermove', seekMove)
-  document.removeEventListener('pointerup', seekStop)
-
-}
+})
 
 const VideoPlayer = {
   play(src) {
