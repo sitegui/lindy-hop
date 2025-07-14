@@ -192,7 +192,7 @@ videoEl.addEventListener('pause', () => {
 })
 
 // Favorites
-const favorites = []
+let favorites = []
 const favoritesEl = shadowRoot.getElementById('favorites')
 const addFavoriteEl = shadowRoot.getElementById('add-favorite')
 addFavoriteEl.addEventListener('click', () => {
@@ -201,7 +201,7 @@ addFavoriteEl.addEventListener('click', () => {
   }
 
   favorites.push(videoEl.currentTime)
-  updateFavorites()
+  renderFavorites()
 
   // If the new favorite overlaps with any other, they both are removed
   const favoriteEls = Array.from(favoritesEl.children)
@@ -213,14 +213,22 @@ addFavoriteEl.addEventListener('click', () => {
     if (favoriteRect.left < lastFavoriteRect.right && favoriteRect.right > lastFavoriteRect.left) {
       favorites.pop()
       favorites.splice(i, 1)
-      updateFavorites()
+      renderFavorites()
       break
     }
   }
+
+  saveFavorites()
 })
 
-function updateFavorites() {
+function renderFavorites() {
   favoritesEl.innerHTML = ''
+
+  if (!Number.isFinite(videoEl.duration)) {
+    videoEl.addEventListener('durationchange', renderFavorites, {once: true})
+    return
+  }
+
   for (const favorite of favorites) {
     const favoriteEl = document.createElement('img')
     favoriteEl.classList.add('favorite')
@@ -231,13 +239,30 @@ function updateFavorites() {
   }
 }
 
+function loadFavorites() {
+  const src = videoEl.src
+  const favoritesStr = localStorage.getItem(`video_player:favorites:${src}`)
+  if (favoritesStr) {
+    favorites = JSON.parse(favoritesStr)
+  } else {
+    favorites = []
+  }
+}
+
+function saveFavorites() {
+  const src = videoEl.src
+  localStorage.setItem(`video_player:favorites:${src}`, JSON.stringify(favorites))
+}
+
 // Timeline movement
 const knobEl = shadowRoot.getElementById('timeline-knob')
+const lastTimeBySource = new Map()
 let isSeeking = false
 
 function updateKnobPosition() {
   if (!isSeeking) {
     if (Number.isFinite(videoEl.currentTime) && Number.isFinite(videoEl.duration)) {
+      lastTimeBySource.set(videoEl.src, videoEl.currentTime)
       knobEl.style.left = `${videoEl.currentTime / videoEl.duration * 100}%`
     } else {
       knobEl.style.left = '0'
@@ -323,14 +348,17 @@ helpModalEl.addEventListener('click', () => {
   helpModalEl.style.display = 'none'
 })
 
+
 const VideoPlayer = {
   play(src) {
+    const startTime = lastTimeBySource.get(src) || 0
     pageEl.style.display = 'block'
     videoEl.src = src
+    videoEl.currentTime = startTime
     videoEl.play()
 
-    favorites.length = 0
-    updateFavorites()
+    loadFavorites()
+    renderFavorites()
     pageEl.requestFullscreen({navigationUI: 'show'})
   }
 }
