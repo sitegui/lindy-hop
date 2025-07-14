@@ -18,6 +18,20 @@ shadowRoot.innerHTML = `
     </div>
   </div>
 </div>
+<div id="help-modal" style="display: none">
+  <h1>Aide</h1>
+  <h2>Boutons</h2>
+  <p><img src="/static/video_player/add_favorite.svg"> Ajouter un point de repère</p>
+  <p><img src="/static/video_player/close.svg"> Fermer</p>
+  <p><img src="/static/video_player/pause.svg"> Pause <img src="/static/video_player/play.svg"> Lecture</p>
+  <h2>Gestes</h2>
+  <p><img src="/static/video_player/tap.svg"> Tape pour pause ou lecture</p>
+  <p><img src="/static/video_player/double_tag.svg"> Tape deux fois pour ajouter un point de repère</p>
+  <p><img src="/static/video_player/long_press.svg"> Maintiens le doigt pour ralentir</p>
+  <p><img src="/static/video_player/swipe_left.svg"> Glisse à gauche pour aller au repère précédent</p>
+  <p><img src="/static/video_player/swipe_right.svg"> Glisse à droite pour aller au repère suivant</p>
+  <div id="help-close"><img src="/static/video_player/close.svg"></div>
+</div>
 <style>
 * {
   /* Mobile screens may have rounded corners */
@@ -126,6 +140,32 @@ shadowRoot.innerHTML = `
   position: absolute;
   width: var(--favorite-size);
   height: var(--favorite-size);
+}
+
+#help-modal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 10px;
+}
+
+#help-modal img {
+  vertical-align: middle;
+}
+
+#help-modal p {
+  margin: 5px 0;
+}
+
+#help-close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  cursor: pointer;
 }
 </style>`
 
@@ -271,6 +311,16 @@ closeEl.addEventListener('click', () => {
   if (document.fullscreenElement) {
     document.exitFullscreen()
   }
+})
+
+// Help
+const helpEl = shadowRoot.getElementById('help')
+const helpModalEl = shadowRoot.getElementById('help-modal')
+helpEl.addEventListener('click', () => {
+  helpModalEl.style.display = 'block'
+})
+helpModalEl.addEventListener('click', () => {
+  helpModalEl.style.display = 'none'
 })
 
 const VideoPlayer = {
