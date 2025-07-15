@@ -59,6 +59,10 @@ shadowRoot.innerHTML = `
   height: 100%;
 }
 
+#video-wrapper {
+  touch-action: none;
+}
+
 #controls {
   position: absolute;
   left: 0;
