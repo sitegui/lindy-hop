@@ -6,6 +6,7 @@ use itertools::Itertools;
 use rust_embed::Embed;
 use serde::Serialize;
 use std::fs;
+use std::path::Path;
 use std::time::SystemTime;
 use unidecode::unidecode;
 
@@ -65,12 +66,13 @@ pub fn render_pages(config: &Config, library: &Library) -> anyhow::Result<()> {
     let rendered = handlebars.render("about_page", &())?;
     fs::write("build/a-propos.html", rendered)?;
 
-    fs::write("build/css.css", asset_data("static/css.css")?)?;
-    fs::write("build/js.mjs", asset_data("static/js.mjs")?)?;
-    fs::write(
-        "build/favicon.png",
-        asset_binary_data("static/favicon.png")?,
-    )?;
+    for item in Asset::iter() {
+        if item.starts_with("static/") {
+            let target = format!("build/{}", item);
+            fs::create_dir_all(Path::new(&target).parent().context("missing parent dir")?)?;
+            fs::write(target, asset_binary_data(&item)?)?;
+        }
+    }
 
     Ok(())
 }

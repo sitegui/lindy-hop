@@ -1,10 +1,12 @@
+import * as VideoPlayer from "./video_player.mjs"
+
+
 window.playVideo = function (thumbnailEl) {
-  const videoEl = thumbnailEl.parentElement.querySelector('video')
   const baseUrl = thumbnailEl.dataset.baseUrl
   const video = thumbnailEl.dataset.video
 
   if (video) {
-    showVideo(videoEl, thumbnailEl, `${baseUrl}/${video}`)
+    VideoPlayer.play(`${baseUrl}/${video}`)
   } else {
     const accessRule = thumbnailEl.dataset.accessRule
     const accessIv = thumbnailEl.dataset.accessIv
@@ -15,20 +17,12 @@ window.playVideo = function (thumbnailEl) {
     const password = getPassword(accessRule)
     if (password) {
       decrypt(password, accessSalt, Number(accessIterations), accessIv, accessCiphertext).then(video => {
-        showVideo(videoEl, thumbnailEl, `${baseUrl}/${video}`)
+        VideoPlayer.play(`${baseUrl}/${video}`)
         savePassword(accessRule, password)
       }).catch(error => {
         alert("Code incorrect")
         console.error(error)
       })
-    }
-  }
-}
-
-window.stopAllOtherVideos = function (videoEl) {
-  for (const anotherVideoEl of document.querySelectorAll('video')) {
-    if (anotherVideoEl !== videoEl) {
-      anotherVideoEl.pause()
     }
   }
 }
@@ -54,13 +48,6 @@ function getPassword(rule) {
 
 function savePassword(rule, password) {
   localStorage.setItem(`password:${rule}`, password)
-}
-
-function showVideo(videoEl, thumbnailEl, video) {
-  videoEl.style.display = ''
-  videoEl.src = video
-  thumbnailEl.style.display = 'none'
-  videoEl.play()
 }
 
 async function decrypt(password, salt, iterations, iv, ciphertext) {

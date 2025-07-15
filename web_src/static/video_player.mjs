@@ -564,18 +564,13 @@ function showGestureFeedback(name) {
   }, {once: true})
 }
 
-const VideoPlayer = {
-  play(src) {
-    const startTime = lastTimeBySource.get(src) || 0
-    pageEl.style.display = 'block'
-    videoEl.src = src
-    videoEl.currentTime = startTime
-    videoEl.play()
+export function play(src) {
+  pageEl.style.display = 'block'
+  videoEl.src = src
+  videoEl.currentTime = lastTimeBySource.get(videoEl.src) || 0
+  videoEl.play()
 
-    loadFavorites()
-    renderFavorites()
-    pageEl.requestFullscreen({navigationUI: 'show'})
-  }
+  loadFavorites()
+  renderFavorites()
+  pageEl.requestFullscreen({navigationUI: 'show'})
 }
-
-window.VideoPlayer = VideoPlayer
