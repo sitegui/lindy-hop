@@ -3,7 +3,12 @@ pageEl.style.display = 'none'
 
 const shadowRoot = pageEl.attachShadow({mode: 'open'})
 shadowRoot.innerHTML = `
-<video id="video"></video>
+<div id="video-wrapper">
+  <div id="gesture-feedback" style="display: none">
+    <img src="" id="gesture-feedback-img">
+  </div>
+  <video id="video"></video>
+</div>
 <div id="controls">
   <div id="help"><img class="icon-button" src="/static/video_player/help.svg"></div>
   <div id="add-favorite"><img class="icon-button" src="/static/video_player/add_favorite.svg"></div>
@@ -32,7 +37,6 @@ shadowRoot.innerHTML = `
   <p><img src="/static/video_player/swipe_right.svg"> Glisse à droite pour aller au repère suivant</p>
   <div id="help-close"><img src="/static/video_player/close.svg"></div>
 </div>
-<div style="position: absolute; top: 0; left: 0; background-color: #eee; font-size: 10px" id="console"></div>
 <style>
 * {
   /* Mobile screens may have rounded corners */
@@ -47,7 +51,7 @@ shadowRoot.innerHTML = `
   box-sizing: border-box;
 }
 
-#video {
+#video-wrapper, #video {
   width: 100%;
   height: 100%;
 }
@@ -168,6 +172,27 @@ shadowRoot.innerHTML = `
   top: 10px;
   cursor: pointer;
 }
+
+#gesture-feedback {
+  position: absolute;
+  left: 25%;
+  width: 50%;
+  top: 25%;
+  height: 50%;
+  opacity: 0.25;
+  animation: gesture-feedback 0.5s linear;
+}
+
+#gesture-feedback > img {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes gesture-feedback {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
 </style>`
 
 document.body.appendChild(pageEl)
@@ -196,7 +221,9 @@ videoEl.addEventListener('pause', () => {
 let favorites = []
 const favoritesEl = shadowRoot.getElementById('favorites')
 const addFavoriteEl = shadowRoot.getElementById('add-favorite')
-addFavoriteEl.addEventListener('click', () => {
+addFavoriteEl.addEventListener('click', addFavorite)
+
+function addFavorite() {
   if (!Number.isFinite(videoEl.currentTime)) {
     return
   }
@@ -220,7 +247,7 @@ addFavoriteEl.addEventListener('click', () => {
   }
 
   saveFavorites()
-})
+}
 
 function renderFavorites() {
   favoritesEl.innerHTML = ''
@@ -350,38 +377,192 @@ helpModalEl.addEventListener('click', () => {
   helpModalEl.style.display = 'none'
 })
 
-// Gestures
-function consoleLog(msg) {
-  const consoleEl = shadowRoot.getElementById('console')
-  const textEl = document.createElement('div')
-  textEl.innerText = msg
-  consoleEl.appendChild(textEl)
-}
+// Gesture detection
 let gestureState = 'NONE'
 let gestureStartTime = null
 let gestureStartX = null
 let gestureStartY = null
-videoEl.addEventListener('pointerdown', event => {
+let gestureX = null
+let gestureY = null
+let gestureTimer = null
+const videoWrapperEl = shadowRoot.getElementById('video-wrapper')
+const maxTapDuration = 200
+const maxTapDistance = 10
+const minSwapDuration = 75
+const maxSwapDuration = 750
+const minSwipeXDistance = 75
+const maxSwipeYRatio = 0.25
+const maxDoubleTapWait = 250
+const slowInitialWait = 500
+const slowMaxInitialDistance = 10
+videoEl.addEventListener('contextmenu', event => {
+  if (gestureState !== 'NONE') {
+    event.preventDefault()
+  }
+})
+videoWrapperEl.addEventListener('pointerdown', event => {
+  event.preventDefault()
+  event.stopPropagation()
+  gestureStartTime = Date.now()
+  gestureStartX = event.clientX
+  gestureStartY = event.clientY
+  gestureX = event.clientX
+  gestureY = event.clientY
+  videoWrapperEl.setPointerCapture(event.pointerId)
+
   if (gestureState === 'NONE') {
     gestureState = 'DOWN'
-    gestureStartTime = Date.now()
-    gestureStartX = event.clientX
-    gestureStartY = event.clientY
-    consoleLog(gestureState)
-    videoEl.setPointerCapture(event.pointerId)
+  } else if (gestureState === 'ONE_TAP') {
+    gestureState = 'DOWN_TWO'
   }
-})
-videoEl.addEventListener('pointermove', event => {
 
+  if (gestureTimer) {
+    clearTimeout(gestureTimer)
+    gestureTimer = null
+  }
+  gestureTimer = setTimeout(() => {
+    if (gestureState === 'DOWN' || gestureState === 'DOWN_TWO') {
+      const distance = Math.hypot(gestureX - gestureStartX, gestureY - gestureStartY)
+      if (distance < slowMaxInitialDistance) {
+        gestureState = 'SLOW'
+        applyStartSlow()
+      }
+    }
+  }, slowInitialWait)
 })
-videoEl.addEventListener('pointerup', event => {
+videoWrapperEl.addEventListener('pointermove', event => {
+  gestureX = event.clientX
+  gestureY = event.clientY
+})
+videoWrapperEl.addEventListener('pointerup', event => {
+  const duration = Date.now() - gestureStartTime
+  const dx = event.clientX - gestureStartX
+  const dy = event.clientY - gestureStartY
+  const distance = Math.hypot(dx, dy)
+
+  if (gestureTimer) {
+    clearTimeout(gestureTimer)
+    gestureTimer = null
+  }
+
   if (gestureState === 'DOWN') {
-    const duration = Date.now() - gestureStartTime
-    const distance = Math.hypot(gestureStartX - event.clientX, gestureStartY - event.clientY)
+    if (duration < maxTapDuration && distance < maxTapDistance) {
+      gestureState = 'ONE_TAP'
+      gestureTimer = setTimeout(() => {
+        if (gestureState === 'ONE_TAP') {
+          gestureState = 'NONE'
+          applyTap()
+        }
+      }, maxDoubleTapWait)
+    } else if (duration > minSwapDuration && duration < maxSwapDuration && Math.abs(dx) > minSwipeXDistance && Math.abs(dy) < Math.abs(dx) * maxSwipeYRatio) {
+      if (dx > 0) {
+        applySwipe('RIGHT')
+      } else {
+        applySwipe('LEFT')
+      }
+
+      gestureState = 'NONE'
+    } else {
+      gestureState = 'NONE'
+    }
+  } else if (gestureState === 'DOWN_TWO') {
     gestureState = 'NONE'
-    consoleLog(`NONE (after ${duration}ms, ${distance}px)`)
+    if (duration < maxTapDuration && distance < maxTapDistance) {
+      applyDoubleTap()
+    }
+  } else if (gestureState === 'SLOW') {
+    gestureState = 'NONE'
+    applyEndSlow()
+  } else {
+    gestureState = 'NONE'
   }
 })
+
+// Gesture action
+function applyTap() {
+  if (!Number.isFinite(videoEl.currentTime)) {
+    return
+  }
+
+  if (videoEl.paused) {
+    videoEl.play()
+    showGestureFeedback('play')
+  } else {
+    videoEl.pause()
+    showGestureFeedback('pause')
+  }
+}
+
+function applyDoubleTap() {
+  if (!Number.isFinite(videoEl.currentTime)) {
+    return
+  }
+
+  addFavorite()
+  showGestureFeedback('add_favorite')
+}
+
+function applySwipe(direction) {
+  const currentTime = videoEl.currentTime
+  if (!Number.isFinite(currentTime)) {
+    return
+  }
+
+  const candidates = favorites.filter(favorite => direction === 'RIGHT' ? favorite > currentTime : favorite < currentTime)
+  if (direction === 'LEFT') {
+    candidates.push(0)
+  }
+  if (candidates.length === 0) {
+    return
+  }
+
+  candidates.sort((a, b) => a - b)
+
+  let bestFavorite = undefined
+  if (direction === 'RIGHT') {
+    bestFavorite = candidates[0]
+  } else {
+    const lastCandidate = candidates[candidates.length - 1]
+    if (candidates.length > 1 && currentTime - lastCandidate < 2) {
+      // Allow double-swipe-left
+      bestFavorite = candidates[candidates.length - 2]
+    } else {
+      bestFavorite = lastCandidate
+    }
+  }
+
+  videoEl.currentTime = bestFavorite
+  showGestureFeedback(direction === 'RIGHT' ? 'swipe_right' : 'swipe_left')
+}
+
+function applyStartSlow() {
+  if (!Number.isFinite(videoEl.currentTime)) {
+    return
+  }
+  videoEl.playbackRate = 0.5
+  showGestureFeedback('long_press')
+}
+
+function applyEndSlow() {
+  videoEl.playbackRate = 1
+}
+
+// Gesture feedback
+const gestureFeedbackEl = shadowRoot.getElementById('gesture-feedback')
+const gestureFeedbackImgEl = shadowRoot.getElementById('gesture-feedback-img')
+
+function showGestureFeedback(name) {
+  gestureFeedbackEl.style.display = 'none'
+  gestureFeedbackImgEl.src = `/static/video_player/${name}.svg`
+
+  setTimeout(() => {
+    gestureFeedbackEl.style.display = ''
+  }, 0)
+
+  gestureFeedbackEl.addEventListener('animationend', () => {
+    gestureFeedbackEl.style.display = 'none'
+  }, {once: true})
+}
 
 const VideoPlayer = {
   play(src) {
