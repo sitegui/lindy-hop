@@ -7,6 +7,8 @@ shadowRoot.innerHTML = `
   <div id="gesture-feedback" style="display: none">
     <img src="" id="gesture-feedback-img">
   </div>
+  <div id="loading" style="display: none"><img src="/static/video_player/loading.svg"></div>
+  <div id="error" style="display: none"><img src="/static/video_player/error.svg"></div>
   <video id="video"></video>
 </div>
 <div id="controls">
@@ -37,6 +39,7 @@ shadowRoot.innerHTML = `
   <p><img src="/static/video_player/swipe_right.svg"> Glisse à droite pour aller au repère suivant</p>
   <div id="help-close"><img src="/static/video_player/close.svg"></div>
 </div>
+<div id="console"></div>
 <style>
 * {
   /* Mobile screens may have rounded corners */
@@ -173,17 +176,19 @@ shadowRoot.innerHTML = `
   cursor: pointer;
 }
 
-#gesture-feedback {
+#gesture-feedback, #loading, #error {
   position: absolute;
   left: 25%;
   width: 50%;
   top: 25%;
   height: 50%;
-  opacity: 0.25;
+}
+
+#gesture-feedback {
   animation: gesture-feedback 0.5s linear;
 }
 
-#gesture-feedback > img {
+#gesture-feedback > img, #loading > img, #error > img {
   width: 100%;
   height: 100%;
 }
@@ -192,6 +197,24 @@ shadowRoot.innerHTML = `
   0% { opacity: 0; }
   50% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+#console {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background-color: #eee;
+  font-size: 10px;
+  display: none; /* comment me to debug this code */
+}
+
+#loading > img {
+  animation: loading 1s linear infinite;
+}
+
+@keyframes loading {
+  0% { rotate: 0; }
+  100% { rotate: 360deg; }
 }
 </style>`
 
@@ -388,10 +411,10 @@ let gestureTimer = null
 const videoWrapperEl = shadowRoot.getElementById('video-wrapper')
 const maxTapDuration = 200
 const maxTapDistance = 10
-const minSwapDuration = 75
+const minSwapDuration = 50
 const maxSwapDuration = 750
 const minSwipeXDistance = 75
-const maxSwipeYRatio = 0.25
+const maxSwipeYRatio = 0.5
 const maxDoubleTapWait = 250
 const slowInitialWait = 500
 const slowMaxInitialDistance = 10
@@ -439,6 +462,8 @@ videoWrapperEl.addEventListener('pointerup', event => {
   const dx = event.clientX - gestureStartX
   const dy = event.clientY - gestureStartY
   const distance = Math.hypot(dx, dy)
+
+  consoleLog(`${gestureState}, ${duration}ms, dx: ${Math.round(dx)}px, dy: ${Math.round(dy)}px`)
 
   if (gestureTimer) {
     clearTimeout(gestureTimer)
@@ -540,6 +565,7 @@ function applyStartSlow() {
     return
   }
   videoEl.playbackRate = 0.5
+  videoEl.play()
   showGestureFeedback('long_press')
 }
 
@@ -564,7 +590,41 @@ function showGestureFeedback(name) {
   }, {once: true})
 }
 
+function consoleLog(msg) {
+  const consoleEl = shadowRoot.getElementById('console')
+  const msgEl = document.createElement('div')
+  msgEl.innerText = msg
+  consoleEl.appendChild(msgEl)
+}
+
+// Loading state
+const loadingEl = shadowRoot.getElementById('loading')
+const errorEl = shadowRoot.getElementById('error')
+videoEl.addEventListener('loadstart', () => {
+  loadingEl.style.display = ''
+})
+videoEl.addEventListener('loadeddata', () => {
+  loadingEl.style.display = 'none'
+})
+videoEl.addEventListener('error', () => {
+  errorEl.style.display = ''
+})
+videoEl.addEventListener('emptied', () => {
+  errorEl.style.display = 'none'
+})
+
+let lastScrollPosition = null
+pageEl.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && lastScrollPosition !== null) {
+    // Exiting fullscreen
+    videoEl.pause()
+    pageEl.style.display = 'none'
+    document.body.scrollTo({top: lastScrollPosition, behavior: 'instant'})
+  }
+})
+
 export function play(src) {
+  lastScrollPosition = document.body.scrollTop
   pageEl.style.display = 'block'
   videoEl.src = src
   videoEl.currentTime = lastTimeBySource.get(videoEl.src) || 0
